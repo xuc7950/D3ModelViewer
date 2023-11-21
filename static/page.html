@@ -37,6 +37,7 @@
     const filename = '<?php echo $fileName ?>';
     const filePath = fileSrc.replace(filename, "");
     const suffix = filename.split(".")[filename.split(".").length-1];
+    const backgroundImg = "<?php echo $this->pluginHost;?>static/images/Background.jpg";
     sessionStorage['format'] = suffix;
     
     switch (suffix.toLowerCase()){
@@ -133,8 +134,10 @@
 				camera.position.set( 100, 200, 300 );
 
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0xa0a0a0 );
+				// scene.background = new THREE.Color( 0xa0a0a0 );
 				// scene.fog = new THREE.Fog( 0xa0a0a0, 500, 1000 );
+    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
 
 				const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 5 );
 				hemiLight.position.set( 0, 200, 0 );
@@ -247,6 +250,8 @@
 			// scene
 
 			scene = new THREE.Scene();
+			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+            scene.background = cubeMap;
 
 // 			const ambientLight = new THREE.AmbientLight( 0xffffff );
 // 			scene.add( ambientLight );
@@ -352,8 +357,10 @@
 			cameraTarget = new THREE.Vector3( 0, - 0.25, 0 );
 
 			scene = new THREE.Scene();
-			scene.background = new THREE.Color( 0x72645b );
-			scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+// 			scene.background = new THREE.Color( 0x72645b );
+// 			scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+            scene.background = cubeMap;
 
 			// Ground
 
@@ -548,7 +555,9 @@
 			camera.position.set( - 1.8, 0.6, 2.7 );
 
 			scene = new THREE.Scene();
-			scene.background = new THREE.Color(0x555555);
+// 			scene.background = new THREE.Color(0x555555);
+			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+            scene.background = cubeMap;
 
 			new RGBELoader()
 				.setPath( fileSrc+"textures/" );
@@ -656,7 +665,9 @@
 				camera.position.z = 2;
 
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color(0x222222);
+				// scene.background = new THREE.Color(0x222222);
+    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
 				scene.add( new THREE.AmbientLight( 0xffffff, 3 ) );
 
 				const directionalLight = new THREE.DirectionalLight( 0xffeedd, 3 );
@@ -746,7 +757,9 @@
 				camera.position.set( 0, 200, 300 );
 
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0xeeeeee );
+				// scene.background = new THREE.Color( 0xeeeeee );
+    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
 
 				scene.add( new THREE.GridHelper( 400, 10 ) );
 
@@ -804,8 +817,10 @@
 				cameraTarget = new THREE.Vector3( 0, - 0.1, 0 );
 
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color( 0x72645b );
-				scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+				// scene.background = new THREE.Color( 0x72645b );
+				// scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
 
 
 				// Ground
@@ -996,7 +1011,9 @@
 				// scene.background = texture;
 				// scene.backgroundBlurriness = 0.5;
 				// scene.environment = texture;
-				scene.background = new THREE.Color(0x555555);
+				// scene.background = new THREE.Color(0x555555);
+    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
 
 				// model
 
@@ -1051,7 +1068,9 @@
 			camera.position.set( 26, - 40, 5 );
 
 			scene = new THREE.Scene();
-			scene.background = new THREE.Color(0x555555);
+// 			scene.background = new THREE.Color(0x555555);
+			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+            scene.background = cubeMap;
 
 			const directionalLight = new THREE.DirectionalLight( 0xffffff, 6 );
 			directionalLight.position.set( 0, 0, 2 );
