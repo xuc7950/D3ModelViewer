@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, user-scalable=no">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+    <title><?php echo $fileName . ' - ' . LNG('kod_name') . LNG('kod_power_by'); ?></title>
+    <meta itemprop="image" content="<?php echo $this->pluginHost;?>static/images/icon.png" />
+	<link href="<?php echo $this->pluginHost;?>static/images/icon.png" rel="Shortcut Icon" type="image/x-icon">
+	<link href="<?php echo $this->pluginHost;?>static/images/icon.png" rel="icon" type="image/x-icon">
+    <script>
+    </script>
+
+    <!--<script src="<?php echo $this->pluginHost;?>static/js/model-gltf-fullscreen.js"></script>-->
+    
+    <style>
+        body{
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <!--<?php echo $fileUrl; ?>-->
+    <!--设置默认路径-->
+    <script type="importmap">
+    	{
+    		"imports": {
+    			"three": "./plugins/D3ModelViewer/static/ThreeJS/build/three.module.js",
+    			"three/addons/": "./plugins/D3ModelViewer/static/ThreeJS/jsm/"
+    		}
+    	}
+    </script>
+    <!--FBX查看器-->
+    <script type='module'>
+    const fileSrc = '<?php echo $fileUrl; ?>';
+    const filename = '<?php echo $fileName ?>';
+    const filePath = fileSrc.replace(filename, "");
+    const suffix = filename.split(".")[filename.split(".").length-1];
+    sessionStorage['format'] = suffix;
+    
+    switch (suffix.toLowerCase()){
+        case "fbx":  viewFbx();
+            break;
+        case "obj":  viewObj();
+            break;
+        case "stl":  viewStl();
+            break;
+        case "gltf":  viewGltf();
+            break;
+        case "glb":  viewGltf();
+            break;
+        case "3ds":  view3ds();
+            break;
+        case "bvh":  viewBvh();
+            break;
+        case "ply":  viewPly();
+            break;
+        case "usdz":  viewUsdz();
+            break;
+        case "3dm":  view3dm();
+            break;
+        default:
+            break;
+    }
+    
+    <?php $suffix = substr($fileName,strripos($fileName, ".")+1); ?>
+    // 导入通用文件
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    // 导入所需模块
+    <?php
+        switch (strtolower($suffix)){
+            case 'fbx':
+                echo "import Stats from 'three/addons/libs/stats.module.js';";
+                echo "import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';";
+                break;
+            case 'obj':
+                echo "import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';";
+		        echo "import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';";
+                break;
+            case 'stl':
+                echo "import Stats from 'three/addons/libs/stats.module.js';";
+                echo "import { STLLoader } from 'three/addons/loaders/STLLoader.js';";
+                break;
+            case 'gltf':
+                echo "import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';";
+                echo "import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';";
+                break;
+            case 'glb':
+                echo "import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';";
+                echo "import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';";
+                break;
+            case '3ds':
+                echo "import { TrackballControls } from 'three/addons/controls/TrackballControls.js';";
+                echo "import { TDSLoader } from 'three/addons/loaders/TDSLoader.js';";
+                break;
+            case 'bvh':
+                echo "import { BVHLoader } from 'three/addons/loaders/BVHLoader.js';";
+                break;
+            case 'ply':
+                echo "import Stats from 'three/addons/libs/stats.module.js';";
+                echo "import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';";
+                break;
+            case 'usdz':
+                echo "import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';";
+                echo "import { USDZLoader } from 'three/addons/loaders/USDZLoader.js';";
+                break;
+            case '3dm':
+                echo "import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js';";
+                echo "import { GUI } from 'three/addons/libs/lil-gui.module.min.js';";
+                break;
+            default:  break;
+        }
+    ?>
+    function viewFbx(){
+		
+		let camera, scene, renderer, stats;
+
+			const clock = new THREE.Clock();
+
+			let mixer;
+
+			init();
+			animate();
+
+			function init() {
+
+				const container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+				camera.position.set( 100, 200, 300 );
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xa0a0a0 );
+				// scene.fog = new THREE.Fog( 0xa0a0a0, 500, 1000 );
+
+				const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 5 );
+				hemiLight.position.set( 0, 200, 0 );
+				scene.add( hemiLight );
+
+				const dirLight = new THREE.DirectionalLight( 0xffffff, 5 );
+				dirLight.position.set( 0, 200, 100 );
+				dirLight.castShadow = true;
+				dirLight.shadow.camera.top = 180;
+				dirLight.shadow.camera.bottom = - 100;
+				dirLight.shadow.camera.left = - 120;
+				dirLight.shadow.camera.right = 120;
+				scene.add( dirLight );
+
+				// scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
+
+				// ground
+				const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
+				mesh.rotation.x = - Math.PI / 2;
+				mesh.receiveShadow = true;
+				scene.add( mesh );
+
+				const grid = new THREE.GridHelper( 2000, 20, 0x000000, 0x000000 );
+				grid.material.opacity = 0.2;
+				grid.material.transparent = true;
+				scene.add( grid );
+
+				// model
+				const loader = new FBXLoader();
+				loader.load( fileSrc , function ( object ) {
+				    if(object.animations.length > 0){
+					    mixer = new THREE.AnimationMixer( object );
+					    const action = mixer.clipAction( object.animations[ 0 ] );
+					    action.play();
+                    }
+					object.traverse( function ( child ) {
+
+						if ( child.isMesh ) {
+
+							child.castShadow = true;
+							child.receiveShadow = true;
+
+						}
+
+					} );
+
+					scene.add( object );
+					viewControls(camera, object);
+
+				} );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.shadowMap.enabled = true;
+				container.appendChild( renderer.domElement );
+
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.target.set( 0, 100, 0 );
+				controls.update();
+
+				window.addEventListener( 'resize', onWindowResize );
+
+				// stats
+				stats = new Stats();
+				container.appendChild( stats.dom );
+				
+    			
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			//
+			
+			
+				
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				const delta = clock.getDelta();
+
+				if ( mixer ) mixer.update( delta );
+
+				renderer.render( scene, camera );
+
+				stats.update();
+
+			}
+    }
+    function viewObj(){
+        let camera, scene, renderer;
+
+		init();
+		animate();
+
+
+		function init() {
+
+			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 20 );
+			camera.position.z = 2.5;
+
+			// scene
+
+			scene = new THREE.Scene();
+
+// 			const ambientLight = new THREE.AmbientLight( 0xffffff );
+// 			scene.add( ambientLight );
+
+// 			const pointLight = new THREE.PointLight( 0xffffff, 8 );
+// 			camera.add( pointLight );
+// 			scene.add( camera );
+			
+			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+			hemiLight.position.set( 0, 200, 0 );
+			scene.add( hemiLight );
+
+			// model
+
+			const onProgress = function ( xhr ) {
+
+				if ( xhr.lengthComputable ) {
+
+					const percentComplete = xhr.loaded / xhr.total * 100;
+					console.log( percentComplete.toFixed( 2 ) + '% downloaded' );
+
+				}
+
+			};
+
+			var mtlFile = fileSrc.slice(0,fileSrc.length-3)+'mtl';
+			console.log(mtlFile);
+			new MTLLoader()
+				.setPath( filePath )
+				// .load( 'male02.mtl', function ( materials ) {
+				.load( mtlFile, function ( materials ) {
+
+					materials.preload();
+
+					new OBJLoader()
+						.setMaterials( materials )
+						.setPath( filePath )
+						.load( fileSrc, function ( object ) {
+
+							object.position.y = - 0.95;
+							object.scale.setScalar( 0.01 );
+							scene.add( object );
+					        viewControls(camera, object);
+
+						}, onProgress );
+
+				} );
+
+			//
+			
+			
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			//
+
+			const controls = new  OrbitControls( camera, renderer.domElement );
+			controls.minDistance = 0.1;
+			controls.maxDistance = 50;
+
+			//
+
+			window.addEventListener( 'resize', onWindowResize );
+
+		}
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+		}
+
+		//
+
+		function animate() {
+
+			requestAnimationFrame( animate );
+			renderer.render( scene, camera );
+
+		}
+    }
+    function viewStl(){
+        let container, stats;
+
+		let camera, cameraTarget, scene, renderer;
+
+		init();
+		animate();
+
+		function init() {
+
+			container = document.createElement( 'div' );
+			document.body.appendChild( container );
+
+			camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
+			camera.position.set( 3, 0.15, 3 );
+
+			cameraTarget = new THREE.Vector3( 0, - 0.25, 0 );
+
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color( 0x72645b );
+			scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+
+			// Ground
+
+			const plane = new THREE.Mesh(
+				new THREE.PlaneGeometry( 40, 40 ),
+				new THREE.MeshPhongMaterial( { color: 0xcbcbcb, specular: 0x474747 } )
+			);
+			plane.rotation.x = - Math.PI / 2;
+			plane.position.y = - 0.5;
+			scene.add( plane );
+
+			plane.receiveShadow = true;
+
+
+			// ASCII file
+
+			const loader = new STLLoader();
+			loader.load( fileSrc, function ( geometry ) {
+
+				const material = new THREE.MeshPhongMaterial( { color: 0xff9c7c, specular: 0x494949, shininess: 200 } );
+				const mesh = new THREE.Mesh( geometry, material );
+
+				mesh.position.set( 0, - 0.25, 0.6 );
+				mesh.rotation.set( 0, - Math.PI / 2, 0 );
+				mesh.scale.set( 0.5, 0.5, 0.5 );
+
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+
+				scene.add( mesh );
+		        viewControls(camera, mesh);
+
+			} );
+
+
+			// Binary files
+
+			const material = new THREE.MeshPhongMaterial( { color: 0xd5d5d5, specular: 0x494949, shininess: 200 } );
+
+			loader.load( './models/stl/binary/pr2_head_pan.stl', function ( geometry ) {
+
+				const mesh = new THREE.Mesh( geometry, material );
+
+				mesh.position.set( 0, - 0.37, - 0.6 );
+				mesh.rotation.set( - Math.PI / 2, 0, 0 );
+				mesh.scale.set( 2, 2, 2 );
+
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+
+				scene.add( mesh );
+		        viewControls(camera, mesh);
+
+			} );
+
+			loader.load( fileSrc, function ( geometry ) {
+
+				const mesh = new THREE.Mesh( geometry, material );
+
+				mesh.position.set( 0.136, - 0.37, - 0.6 );
+				mesh.rotation.set( - Math.PI / 2, 0.3, 0 );
+				mesh.scale.set( 2, 2, 2 );
+
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+
+				scene.add( mesh );
+		        viewControls(camera, mesh);
+
+			} );
+
+			// Colored binary STL
+			loader.load( fileSrc, function ( geometry ) {
+
+				let meshMaterial = material;
+
+				if ( geometry.hasColors ) {
+
+					meshMaterial = new THREE.MeshPhongMaterial( { opacity: geometry.alpha, vertexColors: true } );
+
+				}
+
+				const mesh = new THREE.Mesh( geometry, meshMaterial );
+
+				mesh.position.set( 0.5, 0.2, 0 );
+				mesh.rotation.set( - Math.PI / 2, Math.PI / 2, 0 );
+				mesh.scale.set( 0.3, 0.3, 0.3 );
+
+				mesh.castShadow = true;
+				mesh.receiveShadow = true;
+
+				scene.add( mesh );
+		        viewControls(camera, mesh);
+
+			} );
+
+
+			// Lights
+
+			scene.add( new THREE.HemisphereLight( 0x8d7c7c, 0x494966, 3 ) );
+
+			addShadowedLight( 1, 1, 1, 0xffffff, 3.5 );
+			addShadowedLight( 0.5, 1, - 1, 0xffd500, 3 );
+			// renderer
+
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+			renderer.shadowMap.enabled = true;
+
+			container.appendChild( renderer.domElement );
+
+			// stats
+
+			stats = new Stats();
+			container.appendChild( stats.dom );
+
+			//
+
+			window.addEventListener( 'resize', onWindowResize );
+			const controls = new OrbitControls( camera, renderer.domElement );
+			controls.target.set( 0, 100, 0 );
+			controls.update();
+
+
+		}
+
+		function addShadowedLight( x, y, z, color, intensity ) {
+
+			const directionalLight = new THREE.DirectionalLight( color, intensity );
+			directionalLight.position.set( x, y, z );
+			scene.add( directionalLight );
+
+			directionalLight.castShadow = true;
+
+			const d = 1;
+			directionalLight.shadow.camera.left = - d;
+			directionalLight.shadow.camera.right = d;
+			directionalLight.shadow.camera.top = d;
+			directionalLight.shadow.camera.bottom = - d;
+
+			directionalLight.shadow.camera.near = 1;
+			directionalLight.shadow.camera.far = 4;
+
+			directionalLight.shadow.bias = - 0.002;
+
+		}
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+		}
+
+		function animate() {
+
+			requestAnimationFrame( animate );
+
+			render();
+			stats.update();
+
+		}
+
+		function render() {
+
+			const timer = Date.now() * 0.0005;
+
+			camera.position.x = Math.cos( timer ) * 3;
+			camera.position.z = Math.sin( timer ) * 3;
+
+			camera.lookAt( cameraTarget );
+
+			renderer.render( scene, camera );
+
+		}
+    }
+    function viewGltf(){
+        let camera, scene, renderer;
+
+		init();
+
+		function init() {
+
+			const container = document.createElement( 'div' );
+			document.body.appendChild( container );
+
+			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 50 );
+			camera.position.set( - 1.8, 0.6, 2.7 );
+
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color(0x555555);
+
+			new RGBELoader()
+				.setPath( fileSrc+"textures/" );
+				// .setPath( 'textures/equirectangular/' )
+				// .load( 'royal_esplanade_1k.hdr', function ( texture ) {
+
+				// 	texture.mapping = THREE.EquirectangularReflectionMapping;
+
+				// 	scene.background = texture;
+				// 	scene.environment = texture;
+
+				// 	render();
+
+				// 	// model
+
+				// // 	const loader = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
+				// 	const loader = new GLTFLoader();
+				// 	loader.load( fileSrc , async function ( gltf ) {
+
+				// 		const model = gltf.scene;
+
+				// 		// wait until the model can be added to the scene without blocking due to shader compilation
+
+				// 		await renderer.compileAsync( model, camera, scene );
+
+				// 		scene.add( model );
+
+				// 		render();
+		
+				// 	} );
+
+				// } );
+            // 贴图不好确定，暂先加载白模
+            const loader = new GLTFLoader();
+			loader.load( fileSrc , async function ( gltf ) {
+
+				const model = gltf.scene;
+
+				// wait until the model can be added to the scene without blocking due to shader compilation
+
+				await renderer.compileAsync( model, camera, scene );
+
+				scene.add( model );
+				viewControls(camera, scene);
+
+				render();
+
+			} );
+			
+			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+			hemiLight.position.set( 0, 200, 0 );
+			scene.add( hemiLight );
+
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			renderer.toneMappingExposure = 1;
+			container.appendChild( renderer.domElement );
+
+			const controls = new OrbitControls( camera, renderer.domElement );
+			controls.addEventListener( 'change', render ); // use if there is no animation loop
+			controls.minDistance = 2;
+			controls.maxDistance = 10;
+			controls.target.set( 0, 0, - 0.2 );
+			controls.update();
+
+			window.addEventListener( 'resize', onWindowResize );
+
+		}
+
+		function onWindowResize() {
+
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+			render();
+
+		}
+
+		//
+
+		function render() {
+
+			renderer.render( scene, camera );
+
+		}
+
+    }
+    function view3ds(){
+        let container, controls;
+			let camera, scene, renderer;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 10 );
+				camera.position.z = 2;
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color(0x222222);
+				scene.add( new THREE.AmbientLight( 0xffffff, 3 ) );
+
+				const directionalLight = new THREE.DirectionalLight( 0xffeedd, 3 );
+				directionalLight.position.set( 0, 0, 2 );
+				scene.add( directionalLight );
+
+				//3ds files dont store normal maps
+				// const normal = new THREE.TextureLoader().load( 'models/3ds/portalgun/textures/normal.jpg' );
+
+				const loader = new TDSLoader( );
+				// loader.setResourcePath( 'models/3ds/portalgun/textures/' );
+				loader.setResourcePath( filePath+"textures/" );
+				loader.load( fileSrc, function ( object ) {
+
+					object.traverse( function ( child ) {
+
+						if ( child.isMesh ) {
+
+							child.material.specular.setScalar( 0.1 );
+				// 			child.material.normalMap = normal;
+
+						}
+
+					} );
+
+					scene.add( object );
+				    viewControls(camera, object);
+
+				} );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+
+				controls = new TrackballControls( camera, renderer.domElement );
+
+				window.addEventListener( 'resize', resize );
+
+			}
+
+			function resize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				controls.update();
+				renderer.render( scene, camera );
+
+				requestAnimationFrame( animate );
+
+			}
+    }
+    function viewBvh(){
+        const clock = new THREE.Clock();
+
+			let camera, controls, scene, renderer;
+			let mixer;
+
+			init();
+			animate();
+
+			const loader = new BVHLoader();
+			loader.load( fileSrc, function ( result ) {
+
+				const skeletonHelper = new THREE.SkeletonHelper( result.skeleton.bones[ 0 ] );
+
+				scene.add( result.skeleton.bones[ 0 ] );
+				viewControls(camera, result.skeleton.bones[ 0 ]);
+				scene.add( skeletonHelper );
+
+				// play animation
+				mixer = new THREE.AnimationMixer( result.skeleton.bones[ 0 ] );
+				mixer.clipAction( result.clip ).play();
+
+			} );
+
+			function init() {
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.set( 0, 200, 300 );
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0xeeeeee );
+
+				scene.add( new THREE.GridHelper( 400, 10 ) );
+
+				// renderer
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				document.body.appendChild( renderer.domElement );
+
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.minDistance = 300;
+				controls.maxDistance = 700;
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				const delta = clock.getDelta();
+
+				if ( mixer ) mixer.update( delta );
+
+				renderer.render( scene, camera );
+
+			}
+    }
+    function viewPly(){
+        let container, stats;
+
+			let camera, cameraTarget, scene, renderer;
+
+			init();
+			animate();
+
+			function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
+				camera.position.set( 3, 0.15, 3 );
+
+				cameraTarget = new THREE.Vector3( 0, - 0.1, 0 );
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x72645b );
+				scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+
+
+				// Ground
+
+				const plane = new THREE.Mesh(
+					new THREE.PlaneGeometry( 40, 40 ),
+					new THREE.MeshPhongMaterial( { color: 0xcbcbcb, specular: 0x474747 } )
+				);
+				plane.rotation.x = - Math.PI / 2;
+				plane.position.y = - 0.5;
+				scene.add( plane );
+
+				plane.receiveShadow = true;
+
+
+				// PLY file
+
+				const loader = new PLYLoader();
+				loader.load( fileSrc, function ( geometry ) {
+
+					geometry.computeVertexNormals();
+
+					const material = new THREE.MeshStandardMaterial( { color: 0x009cff, flatShading: true } );
+					const mesh = new THREE.Mesh( geometry, material );
+
+					mesh.position.y = - 0.2;
+					mesh.position.z = 0.3;
+					mesh.rotation.x = - Math.PI / 2;
+					mesh.scale.multiplyScalar( 0.001 );
+
+					mesh.castShadow = true;
+					mesh.receiveShadow = true;
+
+					scene.add( mesh );
+				    viewControls(camera, mesh );
+
+				} );
+
+				loader.load( fileSrc, function ( geometry ) {
+
+					geometry.computeVertexNormals();
+
+					const material = new THREE.MeshStandardMaterial( { color: 0x009cff, flatShading: true } );
+					const mesh = new THREE.Mesh( geometry, material );
+
+					mesh.position.x = - 0.2;
+					mesh.position.y = - 0.02;
+					mesh.position.z = - 0.2;
+					mesh.scale.multiplyScalar( 0.0006 );
+
+					mesh.castShadow = true;
+					mesh.receiveShadow = true;
+
+					scene.add( mesh );
+				    viewControls(camera, mesh );
+
+				} );
+
+				// Lights
+
+				scene.add( new THREE.HemisphereLight( 0x8d7c7c, 0x494966, 3 ) );
+
+				addShadowedLight( 1, 1, 1, 0xffffff, 3.5 );
+				addShadowedLight( 0.5, 1, - 1, 0xffd500, 3 );
+
+				// renderer
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				renderer.shadowMap.enabled = true;
+
+				container.appendChild( renderer.domElement );
+
+				// stats
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				// resize
+
+				window.addEventListener( 'resize', onWindowResize );
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.target.set( 0, 100, 0 );
+				controls.update();
+
+			}
+
+			function addShadowedLight( x, y, z, color, intensity ) {
+
+				const directionalLight = new THREE.DirectionalLight( color, intensity );
+				directionalLight.position.set( x, y, z );
+				scene.add( directionalLight );
+
+				directionalLight.castShadow = true;
+
+				const d = 1;
+				directionalLight.shadow.camera.left = - d;
+				directionalLight.shadow.camera.right = d;
+				directionalLight.shadow.camera.top = d;
+				directionalLight.shadow.camera.bottom = - d;
+
+				directionalLight.shadow.camera.near = 1;
+				directionalLight.shadow.camera.far = 4;
+
+				directionalLight.shadow.mapSize.width = 1024;
+				directionalLight.shadow.mapSize.height = 1024;
+
+				directionalLight.shadow.bias = - 0.001;
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				const timer = Date.now() * 0.0005;
+
+				camera.position.x = Math.sin( timer ) * 2.5;
+				camera.position.z = Math.cos( timer ) * 2.5;
+
+				camera.lookAt( cameraTarget );
+
+				renderer.render( scene, camera );
+
+			}
+    }
+    function viewUsdz(){
+        let camera, scene, renderer;
+
+			init();
+			animate();
+
+			async function init() {
+
+				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
+				camera.position.set( 0, 0.75, - 1.5 );
+
+				scene = new THREE.Scene();
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 2.0;
+				document.body.appendChild( renderer.domElement );
+
+				const controls = new OrbitControls( camera, renderer.domElement );
+				controls.minDistance = 1;
+				controls.maxDistance = 8;
+				// controls.target.y = 15;
+				// controls.update();
+
+				const rgbeLoader = new RGBELoader()
+					.setPath( filePath+"textures/" );
+				// 	.setPath( 'textures/equirectangular/' );
+
+				const usdzLoader = new USDZLoader()
+					.setPath( filePath );
+				// 	.setPath( 'models/usdz/' );
+
+				const [  model ] = await Promise.all( [
+				// 	rgbeLoader.loadAsync( 'venice_sunset_1k.hdr' ),
+					usdzLoader.loadAsync( fileSrc ),
+				] );
+
+				// environment
+
+				// texture.mapping = THREE.EquirectangularReflectionMapping;
+
+				// scene.background = texture;
+				// scene.backgroundBlurriness = 0.5;
+				// scene.environment = texture;
+				scene.background = new THREE.Color(0x555555);
+
+				// model
+
+				model.position.y = 0.25;
+				model.position.z = - 0.25;
+				scene.add( model, new THREE.MeshStandardMaterial({color: 0xffffff }) );
+			    viewControls(camera, model );
+				
+				// lighting
+				const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+    			hemiLight.position.set( 0, 200, 0 );
+    			scene.add( hemiLight );
+
+				window.addEventListener( 'resize', onWindowResize );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				renderer.render( scene, camera );
+
+			}
+    }
+    function view3dm(){
+        let camera, scene, renderer;
+		let controls, gui;
+
+		init();
+		animate();
+
+		function init() {
+
+			THREE.Object3D.DEFAULT_UP.set( 0, 0, 1 );
+
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setPixelRatio( window.devicePixelRatio );
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.body.appendChild( renderer.domElement );
+
+			camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
+			camera.position.set( 26, - 40, 5 );
+
+			scene = new THREE.Scene();
+			scene.background = new THREE.Color(0x555555);
+
+			const directionalLight = new THREE.DirectionalLight( 0xffffff, 6 );
+			directionalLight.position.set( 0, 0, 2 );
+			scene.add( directionalLight );
+			
+			// lighting
+			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+			hemiLight.position.set( 0, 200, 0 );
+			scene.add( hemiLight );
+
+			const loader = new Rhino3dmLoader();
+			//generally, use this for the Library Path: https://cdn.jsdelivr.net/npm/rhino3dm@8.0.0-beta2/
+			loader.setLibraryPath( 'plugins/D3ModelViewer/static/ThreeJS/jsm/loaders/' );
+			loader.load( fileSrc , function ( object ) {
+
+				scene.add( object );
+			    viewControls(camera, object );
+				initGUI( object.userData.layers );
+
+				// hide spinner
+				document.getElementById( 'loader' ).style.display = 'none';
+
+			} );
+
+			controls = new OrbitControls( camera, renderer.domElement );
+
+			window.addEventListener( 'resize', resize );
+
+		}
+
+		function resize() {
+
+			const width = window.innerWidth;
+			const height = window.innerHeight;
+
+			camera.aspect = width / height;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( width, height );
+
+		}
+
+		function animate() {
+
+			controls.update();
+			renderer.render( scene, camera );
+
+			requestAnimationFrame( animate );
+
+		}
+
+		function initGUI( layers ) {
+
+			gui = new GUI( { title: 'layers' } );
+
+			for ( let i = 0; i < layers.length; i ++ ) {
+
+				const layer = layers[ i ];
+				gui.add( layer, 'visible' ).name( layer.name ).onChange( function ( val ) {
+
+					const name = this.object.name;
+
+					scene.traverse( function ( child ) {
+
+						if ( child.userData.hasOwnProperty( 'attributes' ) ) {
+
+							if ( 'layerIndex' in child.userData.attributes ) {
+
+								const layerName = layers[ child.userData.attributes.layerIndex ].name;
+
+								if ( layerName === name ) {
+
+									child.visible = val;
+									layer.visible = val;
+
+								}
+
+							}
+
+						}
+
+					} );
+
+				} );
+
+			}
+
+		}
+    }
+    
+    function viewControls(camera, model){
+        console.log("欢迎使用D3模型查看器，wsad为方向键，qe为上下移动，[]为模型缩小和放大");
+        window.addEventListener('keypress', (e)=>{
+		  // console.log(e.keyCode);
+		   var moveSpeed = 30;
+		   var scale = 0.03;
+		   switch (e.keyCode){
+		       case 119:
+		           camera.translateZ(-moveSpeed);
+		         //  console.log("向前");
+		           break;
+		       case 115:
+		           camera.translateZ(moveSpeed);
+		         //  console.log("向后");
+		           break;
+		       case 97:
+		           camera.translateX(-moveSpeed);
+		         //  console.log("向左");
+		           break;
+		       case 100:
+		           camera.translateX(moveSpeed);
+		         //  console.log("向右");
+		           break;
+		       case 113:
+		           camera.translateY(-moveSpeed);
+		         //  console.log("向下");
+		           break;
+		       case 101:
+		           camera.translateY(moveSpeed);
+		         //  console.log("向上");
+		           break;
+		       case 91:
+		           model.scale.x -= scale;
+		           model.scale.y -= scale;
+		           model.scale.z -= scale;
+		           break;
+		       case 93:
+		           model.scale.x += scale;
+		           model.scale.y += scale;
+		           model.scale.z += scale;
+		           break;
+		     default: break;
+		   }
+		});
+    }
+    </script>
+
+</body>
+</html>
