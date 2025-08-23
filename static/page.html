@@ -9,1203 +9,1270 @@
     <meta itemprop="image" content="<?php echo $this->pluginHost;?>static/images/icon.png" />
 	<link href="<?php echo $this->pluginHost;?>static/images/icon.png" rel="Shortcut Icon" type="image/x-icon">
 	<link href="<?php echo $this->pluginHost;?>static/images/icon.png" rel="icon" type="image/x-icon">
-    <script>
-    </script>
 
     <!--<script src="<?php echo $this->pluginHost;?>static/js/model-gltf-fullscreen.js"></script>-->
     
     <style>
         body{
             overflow: hidden;
+            margin: 0;
+        }
+        .floatTip{
+            position: fixed;
+            top: 2%;
+            left: 3%;
+            color: white;
+        }
+        #loader1{
+            position: fixed;
+            bottom: 0px;
+            left: 0%;
+            width: 100%;
+            height: 10px;
+            background-color: rgba(52, 231, 255, 0.75);
+            text-align: center;
+            font-size: 8px;
+            display: none;
+        }
+        #loader2{
+            position: fixed;
+            bottom: 10px;
+            left: 0%;
+            width: 100%;
+            height: 10px;
+            background-color: rgba(231, 52, 255, 0.75);
+            text-align: center;
+            font-size: 8px;
+            display: none;
         }
     </style>
 </head>
 <body>
-    <!--<?php echo $fileUrl; ?>-->
+    <span class="floatTip">欢迎使用D3模型查看器，wsad为方向键，qe为上下移动，[]为模型缩小和放大</span>
+    <div id="loader1" ></div>
+    <div id="loader2" ></div>
+    <script>
+        const fileURL = location.search.substring(location.search.search("=")+1, 999);
+        const fileFullName = fileURL.split("?")[1].split("&")[2].split("=")[1];
+        const fileSuffix = fileFullName.split(".")[fileFullName.split(".").length-1];
+        const fileName = fileFullName.substring(0, fileFullName.search(fileSuffix)-1);
+        // console.log("文件名: " + fileName);
+        // console.log("文件格式: " + fileSuffix);
+        // console.log("文件地址: " + fileURL);
+    </script>
     <!--设置默认路径-->
     <script type="importmap">
     	{
     		"imports": {
-    			"three": "./plugins/D3ModelViewer/static/ThreeJS/build/three.module.js",
-    			"three/addons/": "./plugins/D3ModelViewer/static/ThreeJS/jsm/"
+    			"three": "./ThreeJS/build/three.module.js",
+    			"three/addons/": "./ThreeJS/jsm/"
     		}
     	}
     </script>
     <!--FBX查看器-->
     <script type='module'>
-    const fileSrc = '<?php echo $fileUrl; ?>';
-    const filename = '<?php echo $fileName ?>';
-    const filePath = fileSrc.replace(filename, "");
-    const suffix = filename.split(".")[filename.split(".").length-1];
-    const backgroundImg = "<?php echo $this->pluginHost;?>static/images/Background.jpg";
-    sessionStorage['format'] = suffix;
-    
-    switch (suffix.toLowerCase()){
-        case "fbx":  viewFbx();
-            break;
-        case "obj":  viewObj();
-            break;
-        case "stl":  viewStl();
-            break;
-        case "gltf":  viewGltf();
-            break;
-        case "glb":  viewGltf();
-            break;
-        case "3ds":  view3ds();
-            break;
-        case "bvh":  viewBvh();
-            break;
-        case "ply":  viewPly();
-            break;
-        case "usdz":  viewUsdz();
-            break;
-        case "3dm":  view3dm();
-            break;
-        default:
-            break;
-    }
-    
-    <?php $suffix = substr($fileName,strripos($fileName, ".")+1); ?>
-    // 导入通用文件
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-    // 导入所需模块
-    <?php
-        switch (strtolower($suffix)){
-            case 'fbx':
-                echo "import Stats from 'three/addons/libs/stats.module.js';";
-                echo "import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';";
-                break;
-            case 'obj':
-                echo "import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';";
-		        echo "import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';";
-                break;
-            case 'stl':
-                echo "import Stats from 'three/addons/libs/stats.module.js';";
-                echo "import { STLLoader } from 'three/addons/loaders/STLLoader.js';";
-                break;
-            case 'gltf':
-                echo "import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';";
-                echo "import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';";
-                break;
-            case 'glb':
-                echo "import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';";
-                echo "import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';";
-                break;
-            case '3ds':
-                echo "import { TrackballControls } from 'three/addons/controls/TrackballControls.js';";
-                echo "import { TDSLoader } from 'three/addons/loaders/TDSLoader.js';";
-                break;
-            case 'bvh':
-                echo "import { BVHLoader } from 'three/addons/loaders/BVHLoader.js';";
-                break;
-            case 'ply':
-                echo "import Stats from 'three/addons/libs/stats.module.js';";
-                echo "import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';";
-                break;
-            case 'usdz':
-                echo "import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';";
-                echo "import { USDZLoader } from 'three/addons/loaders/USDZLoader.js';";
-                break;
-            case '3dm':
-                echo "import { Rhino3dmLoader } from 'three/addons/loaders/3DMLoader.js';";
-                echo "import { GUI } from 'three/addons/libs/lil-gui.module.min.js';";
-                break;
-            default:  break;
+        // const fileSrc = '<?php echo $fileUrl; ?>';
+        // const filename = '<?php echo $fileName ?>';
+        // const filePath = fileSrc.replace(filename, "");
+        // const suffix = filename.split(".")[filename.split(".").length-1];
+        
+        const fileSrc = fileURL;
+        const filename = fileName;
+        const filePath = fileSrc.replace(filename, "");
+        const suffix = fileSuffix;
+        const backgroundImg = "images/Background.jpg";
+        sessionStorage['format'] = suffix;
+
+        // 导入通用模块
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        // 声明格式与模块映射配置表
+        const formatModulesMap = {
+            fbx: [
+                'three/addons/libs/stats.module.js',
+                'three/addons/loaders/FBXLoader.js'
+            ],
+            obj: [
+                'three/addons/loaders/MTLLoader.js',
+                'three/addons/loaders/OBJLoader.js'
+            ],
+            stl: [
+                'three/addons/libs/stats.module.js',
+                'three/addons/loaders/STLLoader.js'
+            ],
+            gltf: [
+                'three/addons/loaders/GLTFLoader.js',
+                'three/addons/loaders/RGBELoader.js'
+            ],
+            glb: [
+                'three/addons/loaders/GLTFLoader.js',
+                'three/addons/loaders/RGBELoader.js'
+            ],
+            '3ds': [
+                'three/addons/controls/TrackballControls.js',
+                'three/addons/loaders/TDSLoader.js'
+            ],
+            bvh: [
+                'three/addons/loaders/BVHLoader.js'
+            ],
+            ply: [
+                'three/addons/libs/stats.module.js',
+                'three/addons/loaders/PLYLoader.js'
+            ],
+            usdz: [
+                'three/addons/loaders/RGBELoader.js',
+                'three/addons/loaders/USDZLoader.js'
+            ],
+            usda: [
+                'three/addons/loaders/RGBELoader.js',
+                'three/addons/loaders/USDZLoader.js'
+            ],
+            usd: [
+                'three/addons/loaders/RGBELoader.js',
+                'three/addons/loaders/USDZLoader.js'
+            ],
+            '3dm': [
+                'three/addons/loaders/3DMLoader.js',
+                'three/addons/libs/lil-gui.module.min.js'
+            ]
+        };
+
+        // 模块缓存，避免重复加载
+        const loadedModulesCache = new Map();
+
+        /**
+         * 动态加载指定格式所需的模块
+         * @param {string} format 文件格式 (fbx, obj, gltf, etc.)
+         * @returns {Promise<Object>} 包含所有加载模块的对象
+         */
+        async function loadFormatModules(format) {
+            format = format.toLowerCase();
+            const modulePaths = formatModulesMap[format];
+            
+            if (!modulePaths) {
+                throw new Error(`未找到格式 "${format}" 的模块配置`);
+            }
+
+            // 检查是否已经缓存
+            if (loadedModulesCache.has(format)) {
+                return loadedModulesCache.get(format);
+            }
+
+            try {
+                // 并行加载所有模块
+                const modulePromises = modulePaths.map(path => import(path));
+                const modules = await Promise.all(modulePromises);
+
+                // 提取模块的导出内容
+                const result = {};
+                modules.forEach((module, index) => {
+                    const moduleName = modulePaths[index].split('/').pop().replace('.js', '');
+                    result[moduleName] = module;
+                });
+
+                // 缓存结果
+                loadedModulesCache.set(format, result);
+                
+                // console.log(`✅ 成功加载 ${format} 格式的模块:`, Object.keys(result));
+                return result;
+
+            } catch (error) {
+                console.error(`❌ 加载 ${format} 模块失败:`, error);
+                throw error;
+            }
         }
-    ?>
-    function viewFbx(){
-		
-		let camera, scene, renderer, stats;
 
-			const clock = new THREE.Clock();
+        
+        async function loadModules() {
+            try {
+                // 根据需要加载特定格式的模块
+                const loadedModules = await loadFormatModules(fileSuffix);
+                // console.log('已加载模块:', loadedModules);
 
-			let mixer;
+                // 开始查看模型
+                switch (suffix.toLowerCase()){
+                    case "fbx":  viewFbx();
+                        break;
+                    case "obj":  viewObj();
+                        break;
+                    case "stl":  viewStl();
+                        break;
+                    case "gltf":  viewGltf();
+                        break;
+                    case "glb":  viewGlb();
+                        break;
+                    case "3ds":  view3ds();
+                        break;
+                    case "bvh":  viewBvh();
+                        break;
+                    case "ply":  viewPly();
+                        break;
+                    case "usdz":  viewUsdz();
+                        break;
+                    case "usda":  viewUsda();
+                        break;
+                    case "usd":  viewUsd();
+                        break;
+                    case "3dm":  view3dm();
+                        break;
+                    default:
+                        break;
+                }
+            } catch (error) {
+                console.error('模块加载过程中出错:', error);
+            }
+        }
 
-			init();
-			animate();
+        // 加载所有必要模块
+        loadModules();
+        // 模型加载进度
+        const onProgress = function ( xhr ) {
+            if ( xhr.lengthComputable ) {
+                document.getElementById("loader1").style.display = "block";
+                const percentComplete = xhr.loaded / xhr.total * 100;
+                document.getElementById("loader1").style.width = percentComplete.toFixed( 2 ) + '%';
+                document.getElementById("loader1").innerText = percentComplete.toFixed( 2 ) + '%';
+                // console.log( percentComplete.toFixed( 2 ) + '% downloaded' );
+                if (percentComplete.toFixed( 0 ) >= 100){
+                    document.getElementById("loader1").style.display = "none";
+                }
+            }
+        };
+        
+        const onProgress2 = function ( xhr ) {
+            if ( xhr.lengthComputable ) {
+                document.getElementById("loader2").style.display = "block";
+                const percentComplete = xhr.loaded / xhr.total * 100;
+                document.getElementById("loader2").style.width = percentComplete.toFixed( 2 ) + '%';
+                document.getElementById("loader2").innerText = percentComplete.toFixed( 2 ) + '%';
+                console.log( percentComplete.toFixed( 2 ) + '% downloaded' );
+                if (percentComplete.toFixed( 0 ) >= 100){
+                    document.getElementById("loader2").style.display = "none";
+                }
+            }
+        };
+        function viewFbx(){
+            let camera, scene, renderer, stats;
+            const clock = new THREE.Clock();
+            const FBXLoader = loadedModulesCache.get('fbx')['FBXLoader'].FBXLoader;
+            const Stats = loadedModulesCache.get('fbx')['stats.module'].default;
+            let mixer;
+            init();
+            animate();
 
-			function init() {
+            function init() {
+                const container = document.createElement( 'div' );
+                document.body.appendChild( container );
 
-				const container = document.createElement( 'div' );
-				document.body.appendChild( container );
+                camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
+                camera.position.set( 100, 200, 300 );
 
-				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-				camera.position.set( 100, 200, 300 );
-
-				scene = new THREE.Scene();
-				// scene.background = new THREE.Color( 0xa0a0a0 );
-				// scene.fog = new THREE.Fog( 0xa0a0a0, 500, 1000 );
-    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xa0a0a0 );
+                // scene.fog = new THREE.Fog( 0xa0a0a0, 500, 1000 );
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
                 scene.background = cubeMap;
 
-				const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 5 );
-				hemiLight.position.set( 0, 200, 0 );
-				scene.add( hemiLight );
+                const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 5 );
+                hemiLight.position.set( 0, 200, 0 );
+                scene.add( hemiLight );
 
-				const dirLight = new THREE.DirectionalLight( 0xffffff, 5 );
-				dirLight.position.set( 0, 200, 100 );
-				dirLight.castShadow = true;
-				dirLight.shadow.camera.top = 180;
-				dirLight.shadow.camera.bottom = - 100;
-				dirLight.shadow.camera.left = - 120;
-				dirLight.shadow.camera.right = 120;
-				scene.add( dirLight );
+                const dirLight = new THREE.DirectionalLight( 0xffffff, 5 );
+                dirLight.position.set( 0, 200, 100 );
+                dirLight.castShadow = true;
+                dirLight.shadow.camera.top = 180;
+                dirLight.shadow.camera.bottom = - 100;
+                dirLight.shadow.camera.left = - 120;
+                dirLight.shadow.camera.right = 120;
+                scene.add( dirLight );
 
-				// scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
+                // scene.add( new THREE.CameraHelper( dirLight.shadow.camera ) );
 
-				// ground
-				const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
-				mesh.rotation.x = - Math.PI / 2;
-				mesh.receiveShadow = true;
-				scene.add( mesh );
+                // ground
+                const mesh = new THREE.Mesh( new THREE.PlaneGeometry( 2000, 2000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
+                mesh.rotation.x = - Math.PI / 2;
+                mesh.receiveShadow = true;
+                scene.add( mesh );
 
-				const grid = new THREE.GridHelper( 2000, 20, 0x000000, 0x000000 );
-				grid.material.opacity = 0.2;
-				grid.material.transparent = true;
-				scene.add( grid );
+                const grid = new THREE.GridHelper( 2000, 20, 0x000000, 0x000000 );
+                grid.material.opacity = 0.2;
+                grid.material.transparent = true;
+                scene.add( grid );
 
-				// model
-				const loader = new FBXLoader();
-				loader.load( fileSrc , function ( object ) {
-				    if(object.animations.length > 0){
-					    mixer = new THREE.AnimationMixer( object );
-					    const action = mixer.clipAction( object.animations[ 0 ] );
-					    action.play();
+                // model
+                const loader = new FBXLoader();
+                loader.load( fileSrc , function ( object ) {
+                    if(object.animations.length > 0){
+                        mixer = new THREE.AnimationMixer( object );
+                        const action = mixer.clipAction( object.animations[ 0 ] );
+                        action.play();
                     }
-					object.traverse( function ( child ) {
-
-						if ( child.isMesh ) {
-
-							child.castShadow = true;
-							child.receiveShadow = true;
-
-						}
-
-					} );
-
-					scene.add( object );
-					viewControls(camera, object);
-
-				} );
-
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.shadowMap.enabled = true;
-				container.appendChild( renderer.domElement );
-
-				const controls = new OrbitControls( camera, renderer.domElement );
-				controls.target.set( 0, 100, 0 );
-				controls.update();
-
-				window.addEventListener( 'resize', onWindowResize );
-
-				// stats
-				stats = new Stats();
-				container.appendChild( stats.dom );
-				
-    			
-			}
-
-			function onWindowResize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			//
-			
-			
-				
-			function animate() {
-
-				requestAnimationFrame( animate );
-
-				const delta = clock.getDelta();
-
-				if ( mixer ) mixer.update( delta );
-
-				renderer.render( scene, camera );
-
-				stats.update();
-
-			}
-    }
-    function viewObj(){
-        let camera, scene, renderer;
-
-		init();
-		animate();
-
-
-		function init() {
-
-			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 20 );
-			camera.position.z = 2.5;
-
-			// scene
-
-			scene = new THREE.Scene();
-			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
-            scene.background = cubeMap;
-
-// 			const ambientLight = new THREE.AmbientLight( 0xffffff );
-// 			scene.add( ambientLight );
-
-// 			const pointLight = new THREE.PointLight( 0xffffff, 8 );
-// 			camera.add( pointLight );
-// 			scene.add( camera );
-			
-			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
-			hemiLight.position.set( 0, 200, 0 );
-			scene.add( hemiLight );
-
-			// model
-
-			const onProgress = function ( xhr ) {
-
-				if ( xhr.lengthComputable ) {
-
-					const percentComplete = xhr.loaded / xhr.total * 100;
-					console.log( percentComplete.toFixed( 2 ) + '% downloaded' );
-
-				}
-
-			};
-
-			var mtlFile = fileSrc.slice(0,fileSrc.length-3)+'mtl';
-			console.log(mtlFile);
-			new MTLLoader()
-				.setPath( filePath )
-				// .load( 'male02.mtl', function ( materials ) {
-				.load( mtlFile, function ( materials ) {
-
-					materials.preload();
-
-					new OBJLoader()
-						.setMaterials( materials )
-						.setPath( filePath )
-						.load( fileSrc, function ( object ) {
-
-							object.position.y = - 0.95;
-							object.scale.setScalar( 0.01 );
-							scene.add( object );
-					        viewControls(camera, object);
-
-						}, onProgress );
-
-				} );
-
-			//
-			
-			
-			renderer = new THREE.WebGLRenderer( { antialias: true } );
-			renderer.setPixelRatio( window.devicePixelRatio );
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
-
-			//
-
-			const controls = new  OrbitControls( camera, renderer.domElement );
-			controls.minDistance = 0.1;
-			controls.maxDistance = 50;
-
-			//
-
-			window.addEventListener( 'resize', onWindowResize );
-
-		}
-
-		function onWindowResize() {
-
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-
-			renderer.setSize( window.innerWidth, window.innerHeight );
-
-		}
-
-		//
-
-		function animate() {
-
-			requestAnimationFrame( animate );
-			renderer.render( scene, camera );
-
-		}
-    }
-    function viewStl(){
-        let container, stats;
-
-		let camera, cameraTarget, scene, renderer;
-
-		init();
-		animate();
-
-		function init() {
-
-			container = document.createElement( 'div' );
-			document.body.appendChild( container );
-
-			camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
-			camera.position.set( 3, 0.15, 3 );
-
-			cameraTarget = new THREE.Vector3( 0, - 0.25, 0 );
-
-			scene = new THREE.Scene();
-// 			scene.background = new THREE.Color( 0x72645b );
-// 			scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
-			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
-            scene.background = cubeMap;
-
-			// Ground
-
-			const plane = new THREE.Mesh(
-				new THREE.PlaneGeometry( 40, 40 ),
-				new THREE.MeshPhongMaterial( { color: 0xcbcbcb, specular: 0x474747 } )
-			);
-			plane.rotation.x = - Math.PI / 2;
-			plane.position.y = - 0.5;
-			scene.add( plane );
-
-			plane.receiveShadow = true;
-
-
-			// ASCII file
-
-			const loader = new STLLoader();
-			loader.load( fileSrc, function ( geometry ) {
-
-				const material = new THREE.MeshPhongMaterial( { color: 0xff9c7c, specular: 0x494949, shininess: 200 } );
-				const mesh = new THREE.Mesh( geometry, material );
-
-				mesh.position.set( 0, - 0.25, 0.6 );
-				mesh.rotation.set( 0, - Math.PI / 2, 0 );
-				mesh.scale.set( 0.5, 0.5, 0.5 );
-
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
-
-				scene.add( mesh );
-		        viewControls(camera, mesh);
-
-			} );
-
-
-			// Binary files
-
-			const material = new THREE.MeshPhongMaterial( { color: 0xd5d5d5, specular: 0x494949, shininess: 200 } );
-
-			loader.load( './models/stl/binary/pr2_head_pan.stl', function ( geometry ) {
-
-				const mesh = new THREE.Mesh( geometry, material );
-
-				mesh.position.set( 0, - 0.37, - 0.6 );
-				mesh.rotation.set( - Math.PI / 2, 0, 0 );
-				mesh.scale.set( 2, 2, 2 );
-
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
-
-				scene.add( mesh );
-		        viewControls(camera, mesh);
-
-			} );
-
-			loader.load( fileSrc, function ( geometry ) {
-
-				const mesh = new THREE.Mesh( geometry, material );
-
-				mesh.position.set( 0.136, - 0.37, - 0.6 );
-				mesh.rotation.set( - Math.PI / 2, 0.3, 0 );
-				mesh.scale.set( 2, 2, 2 );
-
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
-
-				scene.add( mesh );
-		        viewControls(camera, mesh);
-
-			} );
-
-			// Colored binary STL
-			loader.load( fileSrc, function ( geometry ) {
-
-				let meshMaterial = material;
-
-				if ( geometry.hasColors ) {
-
-					meshMaterial = new THREE.MeshPhongMaterial( { opacity: geometry.alpha, vertexColors: true } );
-
-				}
-
-				const mesh = new THREE.Mesh( geometry, meshMaterial );
-
-				mesh.position.set( 0.5, 0.2, 0 );
-				mesh.rotation.set( - Math.PI / 2, Math.PI / 2, 0 );
-				mesh.scale.set( 0.3, 0.3, 0.3 );
-
-				mesh.castShadow = true;
-				mesh.receiveShadow = true;
-
-				scene.add( mesh );
-		        viewControls(camera, mesh);
-
-			} );
-
-
-			// Lights
-
-			scene.add( new THREE.HemisphereLight( 0x8d7c7c, 0x494966, 3 ) );
-
-			addShadowedLight( 1, 1, 1, 0xffffff, 3.5 );
-			addShadowedLight( 0.5, 1, - 1, 0xffd500, 3 );
-			// renderer
-
-			renderer = new THREE.WebGLRenderer( { antialias: true } );
-			renderer.setPixelRatio( window.devicePixelRatio );
-			renderer.setSize( window.innerWidth, window.innerHeight );
-
-			renderer.shadowMap.enabled = true;
-
-			container.appendChild( renderer.domElement );
-
-			// stats
-
-			stats = new Stats();
-			container.appendChild( stats.dom );
-
-			//
-
-			window.addEventListener( 'resize', onWindowResize );
-			const controls = new OrbitControls( camera, renderer.domElement );
-			controls.target.set( 0, 100, 0 );
-			controls.update();
-
-
-		}
-
-		function addShadowedLight( x, y, z, color, intensity ) {
-
-			const directionalLight = new THREE.DirectionalLight( color, intensity );
-			directionalLight.position.set( x, y, z );
-			scene.add( directionalLight );
-
-			directionalLight.castShadow = true;
-
-			const d = 1;
-			directionalLight.shadow.camera.left = - d;
-			directionalLight.shadow.camera.right = d;
-			directionalLight.shadow.camera.top = d;
-			directionalLight.shadow.camera.bottom = - d;
-
-			directionalLight.shadow.camera.near = 1;
-			directionalLight.shadow.camera.far = 4;
-
-			directionalLight.shadow.bias = - 0.002;
-
-		}
-
-		function onWindowResize() {
-
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-
-			renderer.setSize( window.innerWidth, window.innerHeight );
-
-		}
-
-		function animate() {
-
-			requestAnimationFrame( animate );
-
-			render();
-			stats.update();
-
-		}
-
-		function render() {
-
-			const timer = Date.now() * 0.0005;
-
-			camera.position.x = Math.cos( timer ) * 3;
-			camera.position.z = Math.sin( timer ) * 3;
-
-			camera.lookAt( cameraTarget );
-
-			renderer.render( scene, camera );
-
-		}
-    }
-    function viewGltf(){
-        let camera, scene, renderer;
-
-		init();
-
-		function init() {
-
-			const container = document.createElement( 'div' );
-			document.body.appendChild( container );
-
-			camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 50 );
-			camera.position.set( - 1.8, 0.6, 2.7 );
-
-			scene = new THREE.Scene();
-// 			scene.background = new THREE.Color(0x555555);
-			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
-            scene.background = cubeMap;
-
-			new RGBELoader()
-				.setPath( fileSrc+"textures/" );
-				// .setPath( 'textures/equirectangular/' )
-				// .load( 'royal_esplanade_1k.hdr', function ( texture ) {
-
-				// 	texture.mapping = THREE.EquirectangularReflectionMapping;
-
-				// 	scene.background = texture;
-				// 	scene.environment = texture;
-
-				// 	render();
-
-				// 	// model
-
-				// // 	const loader = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
-				// 	const loader = new GLTFLoader();
-				// 	loader.load( fileSrc , async function ( gltf ) {
-
-				// 		const model = gltf.scene;
-
-				// 		// wait until the model can be added to the scene without blocking due to shader compilation
-
-				// 		await renderer.compileAsync( model, camera, scene );
-
-				// 		scene.add( model );
-
-				// 		render();
-		
-				// 	} );
-
-				// } );
-            // 贴图不好确定，暂先加载白模
-            const loader = new GLTFLoader();
-			loader.load( fileSrc , async function ( gltf ) {
-
-				const model = gltf.scene;
-
-				// wait until the model can be added to the scene without blocking due to shader compilation
-
-				await renderer.compileAsync( model, camera, scene );
-
-				scene.add( model );
-				viewControls(camera, scene);
-
-				render();
-
-			} );
-			
-			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
-			hemiLight.position.set( 0, 200, 0 );
-			scene.add( hemiLight );
-
-			renderer = new THREE.WebGLRenderer( { antialias: true } );
-			renderer.setPixelRatio( window.devicePixelRatio );
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			renderer.toneMapping = THREE.ACESFilmicToneMapping;
-			renderer.toneMappingExposure = 1;
-			container.appendChild( renderer.domElement );
-
-			const controls = new OrbitControls( camera, renderer.domElement );
-			controls.addEventListener( 'change', render ); // use if there is no animation loop
-			controls.minDistance = 2;
-			controls.maxDistance = 10;
-			controls.target.set( 0, 0, - 0.2 );
-			controls.update();
-
-			window.addEventListener( 'resize', onWindowResize );
-
-		}
-
-		function onWindowResize() {
-
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-
-			renderer.setSize( window.innerWidth, window.innerHeight );
-
-			render();
-
-		}
-
-		//
-
-		function render() {
-
-			renderer.render( scene, camera );
-
-		}
-
-    }
-    function view3ds(){
-        let container, controls;
-			let camera, scene, renderer;
-
-			init();
-			animate();
-
-			function init() {
-
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
-
-				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 10 );
-				camera.position.z = 2;
-
-				scene = new THREE.Scene();
-				// scene.background = new THREE.Color(0x222222);
-    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
-                scene.background = cubeMap;
-				scene.add( new THREE.AmbientLight( 0xffffff, 3 ) );
-
-				const directionalLight = new THREE.DirectionalLight( 0xffeedd, 3 );
-				directionalLight.position.set( 0, 0, 2 );
-				scene.add( directionalLight );
-
-				//3ds files dont store normal maps
-				// const normal = new THREE.TextureLoader().load( 'models/3ds/portalgun/textures/normal.jpg' );
-
-				const loader = new TDSLoader( );
-				// loader.setResourcePath( 'models/3ds/portalgun/textures/' );
-				loader.setResourcePath( filePath+"textures/" );
-				loader.load( fileSrc, function ( object ) {
-
-					object.traverse( function ( child ) {
-
-						if ( child.isMesh ) {
-
-							child.material.specular.setScalar( 0.1 );
-				// 			child.material.normalMap = normal;
-
-						}
-
-					} );
-
-					scene.add( object );
-				    viewControls(camera, object);
-
-				} );
-
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				container.appendChild( renderer.domElement );
-
-				controls = new TrackballControls( camera, renderer.domElement );
-
-				window.addEventListener( 'resize', resize );
-
-			}
-
-			function resize() {
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			function animate() {
-
-				controls.update();
-				renderer.render( scene, camera );
-
-				requestAnimationFrame( animate );
-
-			}
-    }
-    function viewBvh(){
-        const clock = new THREE.Clock();
-
-			let camera, controls, scene, renderer;
-			let mixer;
-
-			init();
-			animate();
-
-			const loader = new BVHLoader();
-			loader.load( fileSrc, function ( result ) {
-
-				const skeletonHelper = new THREE.SkeletonHelper( result.skeleton.bones[ 0 ] );
-
-				scene.add( result.skeleton.bones[ 0 ] );
-				viewControls(camera, result.skeleton.bones[ 0 ]);
-				scene.add( skeletonHelper );
-
-				// play animation
-				mixer = new THREE.AnimationMixer( result.skeleton.bones[ 0 ] );
-				mixer.clipAction( result.clip ).play();
-
-			} );
-
-			function init() {
-
-				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-				camera.position.set( 0, 200, 300 );
-
-				scene = new THREE.Scene();
-				// scene.background = new THREE.Color( 0xeeeeee );
-    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                    object.traverse( function ( child ) {
+
+                        if ( child.isMesh ) {
+
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+
+                        }
+
+                    } );
+
+                    scene.add( object );
+                    viewControls(camera, object);
+
+                }, onProgress );
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                renderer.shadowMap.enabled = true;
+                container.appendChild( renderer.domElement );
+
+                const controls = new OrbitControls( camera, renderer.domElement );
+                controls.target.set( 0, 100, 0 );
+                controls.update();
+
+                window.addEventListener( 'resize', onWindowResize );
+
+                // stats
+                stats = new Stats();
+                container.appendChild( stats.dom );
+                
+                
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            function animate() {
+                requestAnimationFrame( animate );
+                const delta = clock.getDelta();
+                if ( mixer ) mixer.update( delta );
+                renderer.render( scene, camera );
+                stats.update();
+            }
+        }
+        function viewObj(){
+            let camera, scene, renderer;
+            const MTLLoader = loadedModulesCache.get('obj')['MTLLoader'].MTLLoader;
+            const OBJLoader = loadedModulesCache.get('obj')['OBJLoader'].OBJLoader;
+            init();
+            animate();
+            function init() {
+                camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 20 );
+                camera.position.z = 2.5;
+
+                // scene
+
+                scene = new THREE.Scene();
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
                 scene.background = cubeMap;
 
-				scene.add( new THREE.GridHelper( 400, 10 ) );
+    // 			const ambientLight = new THREE.AmbientLight( 0xffffff );
+    // 			scene.add( ambientLight );
 
-				// renderer
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				document.body.appendChild( renderer.domElement );
+    // 			const pointLight = new THREE.PointLight( 0xffffff, 8 );
+    // 			camera.add( pointLight );
+    // 			scene.add( camera );
+                
+                const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+                hemiLight.position.set( 0, 200, 0 );
+                scene.add( hemiLight );
 
-				controls = new OrbitControls( camera, renderer.domElement );
-				controls.minDistance = 300;
-				controls.maxDistance = 700;
+                // model
 
-				window.addEventListener( 'resize', onWindowResize );
+                var mtlFile = fileSrc.slice(0,fileSrc.length-3)+'mtl';
+                console.log(mtlFile);
+                new MTLLoader()
+                    .setPath( filePath )
+                    // .load( 'male02.mtl', function ( materials ) {
+                    .load( mtlFile, function ( materials ) {
 
-			}
+                        materials.preload();
 
-			function onWindowResize() {
+                        new OBJLoader()
+                            .setMaterials( materials )
+                            .setPath( filePath )
+                            .load( fileSrc, function ( object ) {
 
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+                                object.position.y = - 0.95;
+                                object.scale.setScalar( 0.01 );
+                                scene.add( object );
+                                viewControls(camera, object);
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+                            }, onProgress );
 
-			}
+                    }, onProgress2);
 
-			function animate() {
+                //
+                
+                
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                document.body.appendChild( renderer.domElement );
 
-				requestAnimationFrame( animate );
+                //
 
-				const delta = clock.getDelta();
+                const controls = new  OrbitControls( camera, renderer.domElement );
+                controls.minDistance = 0.1;
+                controls.maxDistance = 50;
 
-				if ( mixer ) mixer.update( delta );
+                //
 
-				renderer.render( scene, camera );
+                window.addEventListener( 'resize', onWindowResize );
 
-			}
-    }
-    function viewPly(){
-        let container, stats;
+            }
 
-			let camera, cameraTarget, scene, renderer;
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
 
-			init();
-			animate();
+            //
 
-			function init() {
+            function animate() {
+                requestAnimationFrame( animate );
+                renderer.render( scene, camera );
+            }
+        }
+        function viewStl(){
+            let container, stats;
+            let camera, cameraTarget, scene, renderer;
+            const STLLoader = loadedModulesCache.get('stl')['STLLoader'].STLLoader;
+            const Stats = loadedModulesCache.get('stl')['stats.module'].default;
+            init();
+            animate();
 
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
+            function init() {
 
-				camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
-				camera.position.set( 3, 0.15, 3 );
+                container = document.createElement( 'div' );
+                document.body.appendChild( container );
 
-				cameraTarget = new THREE.Vector3( 0, - 0.1, 0 );
+                camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
+                camera.position.set( 3, 0.15, 3 );
 
-				scene = new THREE.Scene();
-				// scene.background = new THREE.Color( 0x72645b );
-				// scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
-    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                cameraTarget = new THREE.Vector3( 0, - 0.25, 0 );
+
+                scene = new THREE.Scene();
+    // 			scene.background = new THREE.Color( 0x72645b );
+    // 			scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
                 scene.background = cubeMap;
 
+                // Ground
 
-				// Ground
+                const plane = new THREE.Mesh(
+                    new THREE.PlaneGeometry( 40, 40 ),
+                    new THREE.MeshPhongMaterial( { color: 0xcbcbcb, specular: 0x474747 } )
+                );
+                plane.rotation.x = - Math.PI / 2;
+                plane.position.y = - 0.5;
+                scene.add( plane );
 
-				const plane = new THREE.Mesh(
-					new THREE.PlaneGeometry( 40, 40 ),
-					new THREE.MeshPhongMaterial( { color: 0xcbcbcb, specular: 0x474747 } )
-				);
-				plane.rotation.x = - Math.PI / 2;
-				plane.position.y = - 0.5;
-				scene.add( plane );
+                plane.receiveShadow = true;
 
-				plane.receiveShadow = true;
 
+                // ASCII file
 
-				// PLY file
+                const loader = new STLLoader();
+                loader.load( fileSrc, function ( geometry ) {
 
-				const loader = new PLYLoader();
-				loader.load( fileSrc, function ( geometry ) {
+                    const material = new THREE.MeshPhongMaterial( { color: 0xff9c7c, specular: 0x494949, shininess: 200 } );
+                    const mesh = new THREE.Mesh( geometry, material );
 
-					geometry.computeVertexNormals();
+                    mesh.position.set( 0, - 0.25, 0.6 );
+                    mesh.rotation.set( 0, - Math.PI / 2, 0 );
+                    mesh.scale.set( 0.5, 0.5, 0.5 );
 
-					const material = new THREE.MeshStandardMaterial( { color: 0x009cff, flatShading: true } );
-					const mesh = new THREE.Mesh( geometry, material );
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
 
-					mesh.position.y = - 0.2;
-					mesh.position.z = 0.3;
-					mesh.rotation.x = - Math.PI / 2;
-					mesh.scale.multiplyScalar( 0.001 );
+                    scene.add( mesh );
+                    viewControls(camera, mesh);
 
-					mesh.castShadow = true;
-					mesh.receiveShadow = true;
+                }, onProgress );
 
-					scene.add( mesh );
-				    viewControls(camera, mesh );
 
-				} );
+                // Binary files
 
-				loader.load( fileSrc, function ( geometry ) {
+                const material = new THREE.MeshPhongMaterial( { color: 0xd5d5d5, specular: 0x494949, shininess: 200 } );
 
-					geometry.computeVertexNormals();
+                loader.load( fileSrc, function ( geometry ) {
 
-					const material = new THREE.MeshStandardMaterial( { color: 0x009cff, flatShading: true } );
-					const mesh = new THREE.Mesh( geometry, material );
+                    const mesh = new THREE.Mesh( geometry, material );
 
-					mesh.position.x = - 0.2;
-					mesh.position.y = - 0.02;
-					mesh.position.z = - 0.2;
-					mesh.scale.multiplyScalar( 0.0006 );
+                    mesh.position.set( 0.136, - 0.37, - 0.6 );
+                    mesh.rotation.set( - Math.PI / 2, 0.3, 0 );
+                    mesh.scale.set( 2, 2, 2 );
 
-					mesh.castShadow = true;
-					mesh.receiveShadow = true;
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
 
-					scene.add( mesh );
-				    viewControls(camera, mesh );
+                    scene.add( mesh );
+                    viewControls(camera, mesh);
 
-				} );
+                }, onProgress );
 
-				// Lights
+                // Colored binary STL
+                loader.load( fileSrc, function ( geometry ) {
 
-				scene.add( new THREE.HemisphereLight( 0x8d7c7c, 0x494966, 3 ) );
+                    let meshMaterial = material;
 
-				addShadowedLight( 1, 1, 1, 0xffffff, 3.5 );
-				addShadowedLight( 0.5, 1, - 1, 0xffd500, 3 );
+                    if ( geometry.hasColors ) {
 
-				// renderer
+                        meshMaterial = new THREE.MeshPhongMaterial( { opacity: geometry.alpha, vertexColors: true } );
 
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
+                    }
 
-				renderer.shadowMap.enabled = true;
+                    const mesh = new THREE.Mesh( geometry, meshMaterial );
 
-				container.appendChild( renderer.domElement );
+                    mesh.position.set( 0.5, 0.2, 0 );
+                    mesh.rotation.set( - Math.PI / 2, Math.PI / 2, 0 );
+                    mesh.scale.set( 0.3, 0.3, 0.3 );
 
-				// stats
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
 
-				stats = new Stats();
-				container.appendChild( stats.dom );
+                    scene.add( mesh );
+                    viewControls(camera, mesh);
 
-				// resize
+                }, onProgress );
 
-				window.addEventListener( 'resize', onWindowResize );
-				const controls = new OrbitControls( camera, renderer.domElement );
-				controls.target.set( 0, 100, 0 );
-				controls.update();
 
-			}
+                // Lights
 
-			function addShadowedLight( x, y, z, color, intensity ) {
+                scene.add( new THREE.HemisphereLight( 0x8d7c7c, 0x494966, 3 ) );
 
-				const directionalLight = new THREE.DirectionalLight( color, intensity );
-				directionalLight.position.set( x, y, z );
-				scene.add( directionalLight );
+                addShadowedLight( 1, 1, 1, 0xffffff, 3.5 );
+                addShadowedLight( 0.5, 1, - 1, 0xffd500, 3 );
+                // renderer
 
-				directionalLight.castShadow = true;
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
 
-				const d = 1;
-				directionalLight.shadow.camera.left = - d;
-				directionalLight.shadow.camera.right = d;
-				directionalLight.shadow.camera.top = d;
-				directionalLight.shadow.camera.bottom = - d;
+                renderer.shadowMap.enabled = true;
 
-				directionalLight.shadow.camera.near = 1;
-				directionalLight.shadow.camera.far = 4;
+                container.appendChild( renderer.domElement );
 
-				directionalLight.shadow.mapSize.width = 1024;
-				directionalLight.shadow.mapSize.height = 1024;
+                // stats
 
-				directionalLight.shadow.bias = - 0.001;
+                stats = new Stats();
+                container.appendChild( stats.dom );
 
-			}
+                //
 
-			function onWindowResize() {
+                window.addEventListener( 'resize', onWindowResize );
+                const controls = new OrbitControls( camera, renderer.domElement );
+                controls.target.set( 0, 100, 0 );
+                controls.update();
 
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+            }
 
-			}
+            function addShadowedLight( x, y, z, color, intensity ) {
 
-			function animate() {
+                const directionalLight = new THREE.DirectionalLight( color, intensity );
+                directionalLight.position.set( x, y, z );
+                scene.add( directionalLight );
 
-				requestAnimationFrame( animate );
+                directionalLight.castShadow = true;
 
-				render();
-				stats.update();
+                const d = 1;
+                directionalLight.shadow.camera.left = - d;
+                directionalLight.shadow.camera.right = d;
+                directionalLight.shadow.camera.top = d;
+                directionalLight.shadow.camera.bottom = - d;
 
-			}
+                directionalLight.shadow.camera.near = 1;
+                directionalLight.shadow.camera.far = 4;
 
-			function render() {
+                directionalLight.shadow.bias = - 0.002;
 
-				const timer = Date.now() * 0.0005;
+            }
 
-				camera.position.x = Math.sin( timer ) * 2.5;
-				camera.position.z = Math.cos( timer ) * 2.5;
+            function onWindowResize() {
 
-				camera.lookAt( cameraTarget );
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
 
-				renderer.render( scene, camera );
+                renderer.setSize( window.innerWidth, window.innerHeight );
 
-			}
-    }
-    function viewUsdz(){
-        let camera, scene, renderer;
+            }
 
-			init();
-			animate();
+            function animate() {
 
-			async function init() {
+                requestAnimationFrame( animate );
 
-				camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
-				camera.position.set( 0, 0.75, - 1.5 );
+                render();
+                stats.update();
 
-				scene = new THREE.Scene();
+            }
 
-				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 2.0;
-				document.body.appendChild( renderer.domElement );
+            function render() {
 
-				const controls = new OrbitControls( camera, renderer.domElement );
-				controls.minDistance = 1;
-				controls.maxDistance = 8;
-				// controls.target.y = 15;
-				// controls.update();
+                const timer = Date.now() * 0.0005;
 
-				const rgbeLoader = new RGBELoader()
-					.setPath( filePath+"textures/" );
-				// 	.setPath( 'textures/equirectangular/' );
+                camera.position.x = Math.cos( timer ) * 3;
+                camera.position.z = Math.sin( timer ) * 3;
 
-				const usdzLoader = new USDZLoader()
-					.setPath( filePath );
-				// 	.setPath( 'models/usdz/' );
+                camera.lookAt( cameraTarget );
 
-				const [  model ] = await Promise.all( [
-				// 	rgbeLoader.loadAsync( 'venice_sunset_1k.hdr' ),
-					usdzLoader.loadAsync( fileSrc ),
-				] );
+                renderer.render( scene, camera );
 
-				// environment
+            }
+        }
+        function viewGlb(){
+            viewGltf("glb");
+        }
+        function viewGltf(name="gltf"){
+            let camera, scene, renderer;
+            const GLTFLoader = loadedModulesCache.get(name)['GLTFLoader'].GLTFLoader;
+            const RGBELoader = loadedModulesCache.get(name)['RGBELoader'].RGBELoader;
 
-				// texture.mapping = THREE.EquirectangularReflectionMapping;
+            init();
 
-				// scene.background = texture;
-				// scene.backgroundBlurriness = 0.5;
-				// scene.environment = texture;
-				// scene.background = new THREE.Color(0x555555);
-    			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+            function init() {
+
+                const container = document.createElement( 'div' );
+                document.body.appendChild( container );
+
+                camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 50 );
+                camera.position.set( - 1.8, 0.6, 2.7 );
+
+                scene = new THREE.Scene();
+    // 			scene.background = new THREE.Color(0x555555);
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
                 scene.background = cubeMap;
 
-				// model
+                new RGBELoader()
+                    .setPath( fileSrc+"textures/" );
+                    // .setPath( 'textures/equirectangular/' )
+                    // .load( 'royal_esplanade_1k.hdr', function ( texture ) {
 
-				model.position.y = 0.25;
-				model.position.z = - 0.25;
-				scene.add( model, new THREE.MeshStandardMaterial({color: 0xffffff }) );
-			    viewControls(camera, model );
-				
-				// lighting
-				const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
-    			hemiLight.position.set( 0, 200, 0 );
-    			scene.add( hemiLight );
+                    // 	texture.mapping = THREE.EquirectangularReflectionMapping;
 
-				window.addEventListener( 'resize', onWindowResize );
+                    // 	scene.background = texture;
+                    // 	scene.environment = texture;
 
-			}
+                    // 	render();
 
-			function onWindowResize() {
+                    // 	// model
 
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
+                    // // 	const loader = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
+                    // 	const loader = new GLTFLoader();
+                    // 	loader.load( fileSrc , async function ( gltf ) {
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+                    // 		const model = gltf.scene;
 
-			}
+                    // 		// wait until the model can be added to the scene without blocking due to shader compilation
 
-			function animate() {
+                    // 		await renderer.compileAsync( model, camera, scene );
 
-				requestAnimationFrame( animate );
+                    // 		scene.add( model );
 
-				renderer.render( scene, camera );
+                    // 		render();
+            
+                    // 	} );
 
-			}
-    }
-    function view3dm(){
-        let camera, scene, renderer;
-		let controls, gui;
+                    // } );
+                // 贴图不好确定，暂先加载白模
+                const loader = new GLTFLoader();
+                loader.load( fileSrc , async function ( gltf ) {
 
-		init();
-		animate();
+                    const model = gltf.scene;
 
-		function init() {
+                    // wait until the model can be added to the scene without blocking due to shader compilation
 
-			THREE.Object3D.DEFAULT_UP.set( 0, 0, 1 );
+                    await renderer.compileAsync( model, camera, scene );
 
-			renderer = new THREE.WebGLRenderer( { antialias: true } );
-			renderer.setPixelRatio( window.devicePixelRatio );
-			renderer.setSize( window.innerWidth, window.innerHeight );
-			document.body.appendChild( renderer.domElement );
+                    scene.add( model );
+                    viewControls(camera, scene);
 
-			camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
-			camera.position.set( 26, - 40, 5 );
+                    render();
 
-			scene = new THREE.Scene();
-// 			scene.background = new THREE.Color(0x555555);
-			const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
-            scene.background = cubeMap;
+                }, onProgress );
+                
+                const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+                hemiLight.position.set( 0, 200, 0 );
+                scene.add( hemiLight );
 
-			const directionalLight = new THREE.DirectionalLight( 0xffffff, 6 );
-			directionalLight.position.set( 0, 0, 2 );
-			scene.add( directionalLight );
-			
-			// lighting
-			const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
-			hemiLight.position.set( 0, 200, 0 );
-			scene.add( hemiLight );
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 1;
+                container.appendChild( renderer.domElement );
 
-			const loader = new Rhino3dmLoader();
-			//generally, use this for the Library Path: https://cdn.jsdelivr.net/npm/rhino3dm@8.0.0-beta2/
-			loader.setLibraryPath( 'plugins/D3ModelViewer/static/ThreeJS/jsm/loaders/' );
-			loader.load( fileSrc , function ( object ) {
+                const controls = new OrbitControls( camera, renderer.domElement );
+                controls.addEventListener( 'change', render ); // use if there is no animation loop
+                controls.minDistance = 2;
+                controls.maxDistance = 10;
+                controls.target.set( 0, 0, - 0.2 );
+                controls.update();
 
-				scene.add( object );
-			    viewControls(camera, object );
-				initGUI( object.userData.layers );
+                window.addEventListener( 'resize', onWindowResize );
 
-				// hide spinner
-				document.getElementById( 'loader' ).style.display = 'none';
+            }
 
-			} );
+            function onWindowResize() {
 
-			controls = new OrbitControls( camera, renderer.domElement );
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
 
-			window.addEventListener( 'resize', resize );
+                renderer.setSize( window.innerWidth, window.innerHeight );
 
-		}
+                render();
 
-		function resize() {
+            }
 
-			const width = window.innerWidth;
-			const height = window.innerHeight;
+            //
 
-			camera.aspect = width / height;
-			camera.updateProjectionMatrix();
+            function render() {
 
-			renderer.setSize( width, height );
+                renderer.render( scene, camera );
 
-		}
+            }
 
-		function animate() {
+        }
+        function view3ds(){
+            let container, controls;
+            let camera, scene, renderer;
+            const TrackballControls = loadedModulesCache.get("3ds")['TrackballControls'].TrackballControls;
+            const TDSLoader = loadedModulesCache.get("3ds")['TDSLoader'].TDSLoader;
 
-			controls.update();
-			renderer.render( scene, camera );
+            init();
+            animate();
 
-			requestAnimationFrame( animate );
+            function init() {
 
-		}
+                container = document.createElement( 'div' );
+                document.body.appendChild( container );
 
-		function initGUI( layers ) {
+                camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 10 );
+                camera.position.z = 2;
 
-			gui = new GUI( { title: 'layers' } );
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color(0x222222);
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
+                scene.add( new THREE.AmbientLight( 0xffffff, 3 ) );
 
-			for ( let i = 0; i < layers.length; i ++ ) {
+                const directionalLight = new THREE.DirectionalLight( 0xffeedd, 3 );
+                directionalLight.position.set( 0, 0, 2 );
+                scene.add( directionalLight );
 
-				const layer = layers[ i ];
-				gui.add( layer, 'visible' ).name( layer.name ).onChange( function ( val ) {
+                //3ds files dont store normal maps
+                // const normal = new THREE.TextureLoader().load( 'models/3ds/portalgun/textures/normal.jpg' );
 
-					const name = this.object.name;
+                const loader = new TDSLoader( );
+                // loader.setResourcePath( 'models/3ds/portalgun/textures/' );
+                loader.setResourcePath( filePath+"textures/" );
+                loader.load( fileSrc, function ( object ) {
 
-					scene.traverse( function ( child ) {
+                    object.traverse( function ( child ) {
 
-						if ( child.userData.hasOwnProperty( 'attributes' ) ) {
+                        if ( child.isMesh ) {
 
-							if ( 'layerIndex' in child.userData.attributes ) {
+                            child.material.specular.setScalar( 0.1 );
+                // 			child.material.normalMap = normal;
 
-								const layerName = layers[ child.userData.attributes.layerIndex ].name;
+                        }
 
-								if ( layerName === name ) {
+                    } );
 
-									child.visible = val;
-									layer.visible = val;
+                    scene.add( object );
+                    viewControls(camera, object);
 
-								}
+                }, onProgress2 );
 
-							}
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                container.appendChild( renderer.domElement );
 
-						}
+                controls = new TrackballControls( camera, renderer.domElement );
 
-					} );
+                window.addEventListener( 'resize', resize );
 
-				} );
+            }
 
-			}
+            function resize() {
 
-		}
-    }
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+            }
+
+            function animate() {
+
+                controls.update();
+                renderer.render( scene, camera );
+
+                requestAnimationFrame( animate );
+
+            }
+        }
+        function viewBvh(){
+            const clock = new THREE.Clock();
+            let camera, controls, scene, renderer;
+            let mixer;
+            const BVHLoader = loadedModulesCache.get('bvh')['BVHLoader'].BVHLoader;
+
+            init();
+            animate();
+
+            const loader = new BVHLoader();
+            loader.load( fileSrc, function ( result ) {
+
+                const skeletonHelper = new THREE.SkeletonHelper( result.skeleton.bones[ 0 ] );
+
+                scene.add( result.skeleton.bones[ 0 ] );
+                viewControls(camera, result.skeleton.bones[ 0 ]);
+                scene.add( skeletonHelper );
+
+                // play animation
+                mixer = new THREE.AnimationMixer( result.skeleton.bones[ 0 ] );
+                mixer.clipAction( result.clip ).play();
+
+            }, onProgress );
+
+            function init() {
+                camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
+                camera.position.set( 0, 200, 300 );
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0xeeeeee );
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
+
+                scene.add( new THREE.GridHelper( 400, 10 ) );
+
+                // renderer
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                document.body.appendChild( renderer.domElement );
+
+                controls = new OrbitControls( camera, renderer.domElement );
+                controls.minDistance = 300;
+                controls.maxDistance = 700;
+
+                window.addEventListener( 'resize', onWindowResize );
+
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+            }
+
+            function animate() {
+                requestAnimationFrame( animate );
+                const delta = clock.getDelta();
+                if ( mixer ) mixer.update( delta );
+                renderer.render( scene, camera );
+            }
+        }
+        function viewPly(){
+            let container, stats;
+            let camera, cameraTarget, scene, renderer;
+            const PLYLoader = loadedModulesCache.get('ply')['PLYLoader'].PLYLoader;
+            const Stats = loadedModulesCache.get('fbx')['stats.module'].default;
+
+            init();
+            animate();
+
+            function init() {
+                container = document.createElement( 'div' );
+                document.body.appendChild( container );
+                camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 1, 15 );
+                camera.position.set( 3, 0.15, 3 );
+
+                cameraTarget = new THREE.Vector3( 0, - 0.1, 0 );
+
+                scene = new THREE.Scene();
+                // scene.background = new THREE.Color( 0x72645b );
+                // scene.fog = new THREE.Fog( 0x72645b, 2, 15 );
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
+
+                // Ground
+                const plane = new THREE.Mesh(
+                    new THREE.PlaneGeometry( 40, 40 ),
+                    new THREE.MeshPhongMaterial( { color: 0xcbcbcb, specular: 0x474747 } )
+                );
+                plane.rotation.x = - Math.PI / 2;
+                plane.position.y = - 0.5;
+                scene.add( plane );
+
+                plane.receiveShadow = true;
+
+
+                // PLY file
+                const loader = new PLYLoader();
+                loader.load( fileSrc, function ( geometry ) {
+
+                    geometry.computeVertexNormals();
+
+                    const material = new THREE.MeshStandardMaterial( { color: 0x009cff, flatShading: true } );
+                    const mesh = new THREE.Mesh( geometry, material );
+
+                    mesh.position.y = - 0.2;
+                    mesh.position.z = 0.3;
+                    mesh.rotation.x = - Math.PI / 2;
+                    mesh.scale.multiplyScalar( 0.001 );
+
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+
+                    scene.add( mesh );
+                    viewControls(camera, mesh );
+
+                }, onProgress );
+
+                loader.load( fileSrc, function ( geometry ) {
+
+                    geometry.computeVertexNormals();
+
+                    const material = new THREE.MeshStandardMaterial( { color: 0x009cff, flatShading: true } );
+                    const mesh = new THREE.Mesh( geometry, material );
+
+                    mesh.position.x = - 0.2;
+                    mesh.position.y = - 0.02;
+                    mesh.position.z = - 0.2;
+                    mesh.scale.multiplyScalar( 0.0006 );
+
+                    mesh.castShadow = true;
+                    mesh.receiveShadow = true;
+
+                    scene.add( mesh );
+                    viewControls(camera, mesh );
+
+                }, onProgress2 );
+
+                // Lights
+                scene.add( new THREE.HemisphereLight( 0x8d7c7c, 0x494966, 3 ) );
+
+                addShadowedLight( 1, 1, 1, 0xffffff, 3.5 );
+                addShadowedLight( 0.5, 1, - 1, 0xffd500, 3 );
+
+                // renderer
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+                renderer.shadowMap.enabled = true;
+
+                container.appendChild( renderer.domElement );
+
+                // stats
+                stats = new Stats();
+                container.appendChild( stats.dom );
+
+                // resize
+                window.addEventListener( 'resize', onWindowResize );
+                const controls = new OrbitControls( camera, renderer.domElement );
+                controls.target.set( 0, 100, 0 );
+                controls.update();
+
+            }
+
+            function addShadowedLight( x, y, z, color, intensity ) {
+                const directionalLight = new THREE.DirectionalLight( color, intensity );
+                directionalLight.position.set( x, y, z );
+                scene.add( directionalLight );
+
+                directionalLight.castShadow = true;
+
+                const d = 1;
+                directionalLight.shadow.camera.left = - d;
+                directionalLight.shadow.camera.right = d;
+                directionalLight.shadow.camera.top = d;
+                directionalLight.shadow.camera.bottom = - d;
+
+                directionalLight.shadow.camera.near = 1;
+                directionalLight.shadow.camera.far = 4;
+
+                directionalLight.shadow.mapSize.width = 1024;
+                directionalLight.shadow.mapSize.height = 1024;
+
+                directionalLight.shadow.bias = - 0.001;
+
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+            }
+
+            function animate() {
+                requestAnimationFrame( animate );
+                render();
+                stats.update();
+            }
+
+            function render() {
+                const timer = Date.now() * 0.0005;
+                camera.position.x = Math.sin( timer ) * 2.5;
+                camera.position.z = Math.cos( timer ) * 2.5;
+                camera.lookAt( cameraTarget );
+                renderer.render( scene, camera );
+            }
+        }
+        function viewUsda(){
+            viewUsdz("usda");
+        }
+        function viewUsd(){
+            viewUsdz("usd");
+        }
+        function viewUsdz(name="usdz"){
+            let camera, scene, renderer;
+            const RGBELoader = loadedModulesCache.get('usdz')['RGBELoader'].RGBELoader;
+            const USDZLoader = loadedModulesCache.get('usdz')['USDZLoader'].USDZLoader;
+            init();
+            animate();
+
+            async function init() {
+                camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 0.1, 100 );
+                camera.position.set( 0, 0.75, - 1.5 );
+
+                scene = new THREE.Scene();
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                renderer.toneMapping = THREE.ACESFilmicToneMapping;
+                renderer.toneMappingExposure = 2.0;
+                document.body.appendChild( renderer.domElement );
+
+                const controls = new OrbitControls( camera, renderer.domElement );
+                controls.minDistance = 1;
+                controls.maxDistance = 8;
+                // controls.target.y = 15;
+                // controls.update();
+
+                const rgbeLoader = new RGBELoader()
+                    .setPath( filePath+"textures/" );
+                // 	.setPath( 'textures/equirectangular/' );
+
+                const usdzLoader = new USDZLoader()
+                    .setPath( filePath );
+                // 	.setPath( 'models/usdz/' );
+
+                const [  model ] = await Promise.all( [
+                // 	rgbeLoader.loadAsync( 'venice_sunset_1k.hdr' ),
+                    usdzLoader.loadAsync( fileSrc ),
+                ] );
+
+                // environment
+
+                // texture.mapping = THREE.EquirectangularReflectionMapping;
+
+                // scene.background = texture;
+                // scene.backgroundBlurriness = 0.5;
+                // scene.environment = texture;
+                // scene.background = new THREE.Color(0x555555);
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
+
+                // model
+                model.position.y = 0.25;
+                model.position.z = - 0.25;
+                scene.add( model, new THREE.MeshStandardMaterial({color: 0xffffff }) );
+                viewControls(camera, model );
+                
+                // lighting
+                const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+                hemiLight.position.set( 0, 200, 0 );
+                scene.add( hemiLight );
+                window.addEventListener( 'resize', onWindowResize );
+
+            }
+
+            function onWindowResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize( window.innerWidth, window.innerHeight );
+
+            }
+
+            function animate() {
+                requestAnimationFrame( animate );
+                renderer.render( scene, camera );
+            }
+        }
+        function view3dm(){
+            let camera, scene, renderer;
+            let controls, gui;
+            const Rhino3dmLoader = loadedModulesCache.get('3dm')['Rhino3dmLoader'].Rhino3dmLoader;
+            const GUI = loadedModulesCache.get('3dm')['GUI'].GUI;
+
+            init();
+            animate();
+
+            function init() {
+
+                THREE.Object3D.DEFAULT_UP.set( 0, 0, 1 );
+
+                renderer = new THREE.WebGLRenderer( { antialias: true } );
+                renderer.setPixelRatio( window.devicePixelRatio );
+                renderer.setSize( window.innerWidth, window.innerHeight );
+                document.body.appendChild( renderer.domElement );
+
+                camera = new THREE.PerspectiveCamera( 60, window.innerWidth / window.innerHeight, 1, 1000 );
+                camera.position.set( 26, - 40, 5 );
+
+                scene = new THREE.Scene();
+    // 			scene.background = new THREE.Color(0x555555);
+                const cubeMap = new THREE.CubeTextureLoader().load([backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg,backgroundImg]);
+                scene.background = cubeMap;
+
+                const directionalLight = new THREE.DirectionalLight( 0xffffff, 6 );
+                directionalLight.position.set( 0, 0, 2 );
+                scene.add( directionalLight );
+                
+                // lighting
+                const hemiLight = new THREE.HemisphereLight( 0xffffff, 0x444444, 3 );
+                hemiLight.position.set( 0, 200, 0 );
+                scene.add( hemiLight );
+
+                const loader = new Rhino3dmLoader();
+                //generally, use this for the Library Path: https://cdn.jsdelivr.net/npm/rhino3dm@8.0.0-beta2/
+                loader.setLibraryPath( 'plugins/D3ModelViewer/static/ThreeJS/jsm/loaders/' );
+                loader.load( fileSrc , function ( object ) {
+
+                    scene.add( object );
+                    viewControls(camera, object );
+                    initGUI( object.userData.layers );
+
+                    // hide spinner
+                    document.getElementById( 'loader' ).style.display = 'none';
+
+                }, onProgress );
+
+                controls = new OrbitControls( camera, renderer.domElement );
+
+                window.addEventListener( 'resize', resize );
+
+            }
+
+            function resize() {
+
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize( width, height );
+
+            }
+
+            function animate() {
+
+                controls.update();
+                renderer.render( scene, camera );
+
+                requestAnimationFrame( animate );
+
+            }
+
+            function initGUI( layers ) {
+
+                gui = new GUI( { title: 'layers' } );
+
+                for ( let i = 0; i < layers.length; i ++ ) {
+
+                    const layer = layers[ i ];
+                    gui.add( layer, 'visible' ).name( layer.name ).onChange( function ( val ) {
+
+                        const name = this.object.name;
+
+                        scene.traverse( function ( child ) {
+
+                            if ( child.userData.hasOwnProperty( 'attributes' ) ) {
+
+                                if ( 'layerIndex' in child.userData.attributes ) {
+
+                                    const layerName = layers[ child.userData.attributes.layerIndex ].name;
+
+                                    if ( layerName === name ) {
+
+                                        child.visible = val;
+                                        layer.visible = val;
+
+                                    }
+
+                                }
+
+                            }
+
+                        } );
+
+                    } );
+
+                }
+
+            }
+        }
+        
+        function viewControls(camera, model){
+            window.addEventListener('keypress', (e)=>{
+            // console.log(e.keyCode);
+            var moveSpeed = 30;
+            var scale = 0.03;
+            switch (e.keyCode){
+                case 119:
+                    camera.translateZ(-moveSpeed);
+                    //  console.log("向前");
+                    break;
+                case 115:
+                    camera.translateZ(moveSpeed);
+                    //  console.log("向后");
+                    break;
+                case 97:
+                    camera.translateX(-moveSpeed);
+                    //  console.log("向左");
+                    break;
+                case 100:
+                    camera.translateX(moveSpeed);
+                    //  console.log("向右");
+                    break;
+                case 113:
+                    camera.translateY(-moveSpeed);
+                    //  console.log("向下");
+                    break;
+                case 101:
+                    camera.translateY(moveSpeed);
+                    //  console.log("向上");
+                    break;
+                case 91:
+                    model.scale.x -= scale;
+                    model.scale.y -= scale;
+                    model.scale.z -= scale;
+                    break;
+                case 93:
+                    model.scale.x += scale;
+                    model.scale.y += scale;
+                    model.scale.z += scale;
+                    break;
+                default: break;
+            }
+            });
+        }
     
-    function viewControls(camera, model){
-        console.log("欢迎使用D3模型查看器，wsad为方向键，qe为上下移动，[]为模型缩小和放大");
-        window.addEventListener('keypress', (e)=>{
-		  // console.log(e.keyCode);
-		   var moveSpeed = 30;
-		   var scale = 0.03;
-		   switch (e.keyCode){
-		       case 119:
-		           camera.translateZ(-moveSpeed);
-		         //  console.log("向前");
-		           break;
-		       case 115:
-		           camera.translateZ(moveSpeed);
-		         //  console.log("向后");
-		           break;
-		       case 97:
-		           camera.translateX(-moveSpeed);
-		         //  console.log("向左");
-		           break;
-		       case 100:
-		           camera.translateX(moveSpeed);
-		         //  console.log("向右");
-		           break;
-		       case 113:
-		           camera.translateY(-moveSpeed);
-		         //  console.log("向下");
-		           break;
-		       case 101:
-		           camera.translateY(moveSpeed);
-		         //  console.log("向上");
-		           break;
-		       case 91:
-		           model.scale.x -= scale;
-		           model.scale.y -= scale;
-		           model.scale.z -= scale;
-		           break;
-		       case 93:
-		           model.scale.x += scale;
-		           model.scale.y += scale;
-		           model.scale.z += scale;
-		           break;
-		     default: break;
-		   }
-		});
-    }
     </script>
 
 </body>

@@ -6,22 +6,22 @@
 <b>插件安装说明：</b>
 <ol>
 
-  <li>安装此插件请保证可道云的文件夹（KodExplorer）存放在服务器根目录，以保证各文件的准确获取；</li>
+  <li>安装此插件请保证可道云的文件夹（KodExplorer / Kodbox）存放在服务器根目录，以保证各文件的准确获取；</li>
   
-  <li>插件解压后放置在<code>/KodExplorer/plugins/</code>文件夹下即可。</li>
+  <li>插件解压后放置在<code>/KodExplorer(Kodbox)/plugins/</code>文件夹下即可。</li>
   </ol>
 
 <hr/>
 
 
-D3ModelViewer is a Three.js based plugin for viewing 3D models in <a href="https://github.com/kalcaddle/KodExplorer" >KodExplorer</a>, supporting commonly used file formats such as fbx, obj, gltf, glb, bvh, 3ds, ply, stl, USDZ, 3DM
+D3ModelViewer is a Three.js based plugin for viewing 3D models in <a href="https://github.com/kalcaddle/KodExplorer" >KodExplorer / Kodbox</a>, supporting commonly used file formats such as fbx, obj, gltf, glb, bvh, 3ds, ply, stl, USDZ, 3DM
 
 <b>Plugin installation instructions:</b>
 <ol>
 
-<li>Please ensure that the KodExplorer folder for installing this plugin is stored in the server root directory to ensure accurate retrieval of all files;</li>
+<li>Please ensure that the KodExplorer(Kodbox) folder for installing this plugin is stored in the server root directory to ensure accurate retrieval of all files;</li>
    
-<li>After extracting the plugin, place it in the <code>/KodExplorer/plugins/</code> folder.</li>
+<li>After extracting the plugin, place it in the <code>/KodExplorer(Kodbox)/plugins/</code> folder.</li>
  </ol>
  
 

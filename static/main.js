@@ -1,17 +1,16 @@
-kodReady.push(function() {
-    kodApp.add({
-        name: "D3ModelViewer",
-        title: "{{LNG.D3ModelViewer.meta.name}}",
-        icon: "{{pluginHost}}static/images/icon.png",
-        ext: "{{config.fileExt}}",
-        sort: "{{config.fileSort}}",
-        callback: function(path, ext) {
-            var url = '{{pluginApi}}&path=' + core.pathCommon(path);
-            if ('window' == "{{config.openWith}}" && !core.isFileView()) {
-                window.open(url);
-            } else {
-                core.openDialog(url, core.icon(ext), htmlEncode(core.pathThis(path)));
+kodReady.push(function(){
+    Events.bind('explorer.kodApp.before',function(appList){
+        appList.push({
+            name:'{{package.id}}',
+            title:'{{package.name}}',
+            ext:"{{config.fileExt}}",
+            sort:"{{config.fileSort}}",
+            icon:'{{pluginHost}}static/images/icon.png',
+            callback:function(fileSource,fileSuffix,filename){
+				var fileURL = core.path2url(fileSource);
+				var openURL = "{{pluginHost}}static/page.html?file="+fileURL+"&fileName="+filename;
+				core.openDialog(openURL, filename, "");
             }
-        }
+        });        
     });
 });

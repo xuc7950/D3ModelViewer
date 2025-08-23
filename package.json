@@ -1,53 +1,65 @@
 {
-	"id": "D3ModelViewer",
-	"name": "{{LNG.D3ModelViewer.meta.name}}",
-	"title": "{{LNG.D3ModelViewer.meta.title}}",
-	"version": "1.0",
-	"category": "file",
-	"source": {
-		"icon": "{{pluginHost}}static/images/icon.png"
+	"id":"D3ModelViewer",
+	"name":"{{LNG['D3ModelViewer.meta.title']}}",
+	"title":"{{LNG['D3ModelViewer.meta.title']}}",
+	"version":"1.10",
+	"source":{
+		"className":"x-item-icon x-html",
+        "icon":"{{pluginHost}}static/images/icon.png",
+        "screenshoot":[
+            "{{pluginHost}}static/images/Background.png"
+        ]
 	},
-	"description": "{{LNG.D3ModelViewer.meta.desc}}",
-	"auther": {
-		"copyright": "mengkun",
-		"homePage": "https://mkblog.cn"
-	},
-	"configItem": {
-		"formStyle": {
-			"className": "form-box-title-left",
-			"tabs": [{
-				"name": "{{LNG.Plugin.tab.basic}}",
-				"field": ["pluginAuth", "pluginAuthOpen", "sep001", "openWith"]
-			}]
+	"category":"file",
+	"description":"{{LNG['D3ModelViewer.meta.desc']}}",
+	"keywords":"3D,model,viewer",
+	"auther":{
+        "copyright":"chao",
+        "homePage":"https://github.com/xuc7950/D3ModelViewer"
+    },
+	"configItem":{
+		"pluginAuth":{
+			"type":"userSelect",
+			"value":{"all":1},
+			"display":"{{LNG['admin.plugin.auth']}}",
+			"desc":"{{LNG['admin.plugin.authDesc']}}",
+			"require":1
 		},
-		"pluginAuth": {
-			"type": "userSelect",
-			"value": "all:1",
-			"display": "{{LNG.Plugin.config.auth}}",
-			"desc": "{{LNG.Plugin.config.authDesc}}",
-			"require": 1
+		"fileExt":{
+			"type":"tags",
+			"display":"{{LNG['admin.plugin.fileExt']}}",
+			"desc":"{{LNG['admin.plugin.fileExtDesc']}}",
+			"value":"fbx,obj,gltf,glb,bvh,3ds,ply,stl,usdz,3dm"
 		},
-		"sep001": "<hr/>",
-		"openWith": {
-			"type": "radio",
-			"value": "dialog",
-			"display": "{{LNG.Plugin.Config.openWith}}",
-			"info": [
-				["dialog", "{{LNG.Plugin.Config.openWithDilog}}"],
-				["window", "{{LNG.Plugin.Config.openWithWindow}}"]
-			]
+		"sep1001":"<hr/>",
+		
+		"fileView":{
+			"type":"switch",
+			"display":"{{LNG['D3ModelViewer.app.show']}}",
+			"desc":"{{LNG['D3ModelViewer.app.showDesc']}}",
+			"value":"1",
+			"switchItem":{"1":"fileViewSort"}
 		},
-		"fileExt": {
-			"type": "tags",
-			"display": "{{LNG.Plugin.Config.fileExt}}",
-			"desc": "{{LNG.Plugin.Config.fileExtDesc}}",
-			"value": "fbx,obj,gltf,glb,bvh,3ds,ply,stl,usdz,3dm"
+		"fileViewSort":{
+			"type":"number",
+			"display":"{{LNG['admin.plugin.fileSort']}}",
+			"desc":"{{LNG['admin.plugin.fileSortDesc']}}",
+			"value":10
 		},
-		"fileSort": {
-			"type": "number",
-			"display": "{{LNG.Plugin.Config.fileSort}}",
-			"desc": "{{LNG.Plugin.Config.fileSortDesc}}",
-			"value": 10
-		}
+		
+		"sep1002":"<hr/>",
+		"fileEdit":{
+			"type":"switch",
+			"display":"{{LNG['D3ModelViewer.app.edit']}}",
+			"desc":"{{LNG['D3ModelViewer.app.editDesc']}}",
+			"value":"1",
+			"switchItem":{"1":"fileEditSort"}
+		},
+		"fileEditSort":{
+			"type":"number",
+			"display":"{{LNG['admin.plugin.fileSort']}}",
+			"desc":"{{LNG['admin.plugin.fileSortDesc']}}",
+			"value":5
+		}	
 	}
 }
