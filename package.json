@@ -9,8 +9,8 @@
 	},
 	"description": "{{LNG.D3ModelViewer.meta.desc}}",
 	"auther": {
-		"copyright": "mengkun",
-		"homePage": "https://mkblog.cn"
+		"copyright": "chao",
+		"homePage": "https://github.com/xuc7950/D3ModelViewer"
 	},
 	"configItem": {
 		"formStyle": {
